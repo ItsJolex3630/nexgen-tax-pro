@@ -1284,6 +1284,16 @@ dialog{border:0;padding:0;background:transparent;max-width:none;max-height:none}
  <section class="sec lt" style="padding-top:0"><div class="w cgrid f1">
   <div id="leadHost"></div>
   <div class="cinfo">
+   <div class="cb rv" style="border:1px solid rgba(212,175,55,0.4);background:linear-gradient(135deg,rgba(212,175,55,0.06),rgba(0,0,0,0.02));box-shadow:0 4px 16px rgba(0,0,0,0.04)">
+    <span class="k" style="color:var(--gold,#c59b27);font-weight:700" data-i18n="bd.already.h">¿Ya pediste tu demo?</span>
+    <span class="s" data-i18n="bd.already.p">Pulsa aquí para llenar los datos proporcionados para tu oficina.</span>
+    <p style="margin-top:10px">
+     <a class="btn btn-g btn-s" data-demo-data target="_blank" rel="noopener noreferrer">
+      <span data-i18n="bd.already.b">Llenar datos proporcionados</span>
+      <svg width="16" height="16" aria-hidden="true"><use href="#i-ext"/></svg>
+     </a>
+    </p>
+   </div>
    <div class="cb rv"><span class="k" data-i18n="bd.q.h">x</span><span class="s" data-i18n="bd.q.p">x</span><p style="margin-top:8px"><a class="btn btn-g btn-s" data-formaloo target="_blank" rel="noopener noreferrer"><span data-i18n="bd.q.b">x</span><svg width="16" height="16" aria-hidden="true"><use href="#i-ext"/></svg></a></p></div>
    <div class="cb rv" style="--d:60ms"><span class="k" data-i18n="ct.sw">Software &amp; demos</span><a class="big" data-tel="sw"><span data-ph="sw"></span></a></div>
    <div class="cb rv" style="--d:120ms"><span class="k" data-i18n="ct.tm">Team &amp; general contact</span><a class="big" data-tel="team"><span data-ph="team"></span></a></div>
@@ -1552,6 +1562,7 @@ const CONFIG={
   email:'info@nexgentaxpro.com',                           // listed on NexGen's current website
   whatsapp:'',                                             // WhatsApp enabled only on the Book a Demo page (numbers provided by the client)
   formalooUrl:'https://nexgentaxpro.formaloo.me/95tbh3',  // official NexGen online form
+  demoDataUrl:'https://twonline-25.taxwise.com/',          // TaxWise portal for office data entry
   formEndpoint:'',                                         // e.g. https://api.example.com/forms  (server-side validation, storage, e-sign audit log)
   assistantEndpoint:'',                                    // server-side AI proxy. Empty = guided FAQ mode
   leadEmail:'info@nexgentaxpro.com',                       // Book a Demo messages go here
@@ -1748,6 +1759,9 @@ Object.assign(D,{
 'bd.q.h':['Prefer NexGen\'s own form?','¿Prefieres el formulario de NexGen?'],
 'bd.q.p':['Open the current registration form in a new tab.','Abre el formulario de registro actual en una pestaña nueva.'],
 'bd.q.b':['Open the form','Abrir el formulario'],
+'bd.already.h':['Already requested your demo?','¿Ya pediste tu demo?'],
+'bd.already.p':['Click here to fill out the details provided for your office setup.','Pulsa aquí para llenar los datos proporcionados para tu oficina.'],
+'bd.already.b':['Fill out provided details','Llenar datos proporcionados'],
 'bd.next.h':['What happens next','Qué sigue'],
 'bd.next.p':['Your message is already written for you. Choose WhatsApp or Gmail, review it and press Send there. The team replies from that conversation.','Tu mensaje ya está redactado. Elige WhatsApp o Gmail, revísalo y pulsa Enviar allí. El equipo responde desde esa conversación.'],
 'bd.form.h':['Tell us about you','Cuéntanos sobre ti'],
@@ -2297,6 +2311,7 @@ function fillConfig(){
   $$('[data-tel]').forEach(e=>{e.href='tel:'+CONFIG.phones[e.dataset.tel].tel});
   $$('[data-mail]').forEach(e=>{e.href='mailto:'+CONFIG.email});
   $$('[data-formaloo]').forEach(e=>{e.href=CONFIG.formalooUrl});
+  $$('[data-demo-data]').forEach(e=>{e.href=CONFIG.demoDataUrl});
 }
 function renderFaq(){
   $('#faq').innerHTML=[1,2,3,4,5,6,7,8].map(n=>'<details><summary>'+esc(t('fq.'+n+'q'))+'</summary><div>'+t('fq.'+n+'a')+'</div></details>').join('');
