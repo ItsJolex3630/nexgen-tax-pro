@@ -153,6 +153,8 @@ async function sendEmail(env: Env, { to, subject, html, text }: SendArgs): Promi
       body: JSON.stringify({
         secret: env.GMAIL_WEBHOOK_SECRET || "",
         to, subject, html, text,
+        name: fromName,
+        fromName: fromName,
         from: fromName + " <" + from + ">",
       }),
     });
