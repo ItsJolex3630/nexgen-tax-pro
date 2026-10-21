@@ -11,6 +11,8 @@
 .env.test
 !.env.example
 *.local
+.dev.vars
+.dev.vars.*
 
 # Dependencias y artefactos de compilación
 node_modules/

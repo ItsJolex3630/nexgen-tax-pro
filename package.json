@@ -1,0 +1,25 @@
+{
+  "name": "nexgen-tax-pro",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NexGen Tax Pro · Plataforma corporativa con autenticación Serverless Better Auth + Turso sobre Cloudflare Pages Functions",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler pages dev . --port 8788",
+    "deploy": "wrangler pages deploy . --project-name nexgen-tax-pro --branch main",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push --force",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.18.0",
+    "better-auth": "^1.7.10",
+    "drizzle-orm": "^0.45.4",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.11",
+    "tsx": "^4.23.15",
+    "wrangler": "^4.42.0"
+  }
+}
