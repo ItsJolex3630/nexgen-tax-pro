@@ -228,7 +228,10 @@
     if (first) setTimeout(function () { first.focus(); }, 60);
   }
 
-  function bindView(body) {
+function bindView(body) {
+    if (!body) return;
+
+    // 1. Navegación entre vistas
     $$("[data-go]", body).forEach(function (b) {
       b.addEventListener("click", function () {
         if (b.dataset.go === "login") { otpMode = "verify"; pendingEmail = ""; }
@@ -237,138 +240,16 @@
       });
     });
 
-    var form = $("[data-form]", body);
-    if (!form) return;
-
-    form.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      var btn = $(".auth-submit", form);
-      var name = form.dataset.form;
-
-      if (name === "login") {
-        var email = (form.elements.namedItem("email") || {}).value;
-        var pass = (form.elements.namedItem("password") || {}).value;
-        email = String(email || "").trim();
-        if (!email || !pass) return msg("Completa tu correo y contraseña.", "error");
-        busy(btn, true, "Entrando…");
-        var r = await api("/sign-in/email", { method: "POST", body: { email: email, password: pass } });
-        if (r.ok) {
-          await refreshSession();
-          if (session) { view = "account"; render(); }
-          else { view = "login"; render(); msg("Sesión iniciada. Recargando…", "ok"); setTimeout(function () { location.reload(); }, 800); }
-          return;
-        }
-        busy(btn, false);
-        var code = (r.data && r.data.code) || "";
-        if (code === "EMAIL_NOT_VERIFIED" || /verif/i.test(errText(r))) {
-          var sent = await sendOtp(email, "email-verification");
-          switchOtp(email, "verify", sent);
-          if (!sent) msg("Tu correo requiere verificación. Pulsa «Reenviar código».", "error");
-          return;
-        }
-        msg(errText(r), "error");
-        return;
-      }
-
-      if (name === "signup") {
-        var el = function (n) { return form.elements.namedItem(n); };
-        var data = {
-          name: String((el("name") || {}).value || "").trim(),
-          email: String((el("email") || {}).value || "").trim(),
-          password: String((el("password") || {}).value || ""),
-          phone: String((el("phone") || {}).value || "").trim() || undefined,
-          officeName: String((el("officeName") || {}).value || "").trim() || undefined
-        };
-        if (!data.name) return msg("Escribe tu nombre completo.", "error");
-        if (!data.email) return msg("Escribe tu correo electrónico.", "error");
-        if (data.password.length < 8) return msg("La contraseña debe tener al menos 8 caracteres.", "error");
-        busy(btn, true, "Creando cuenta…");
-        var sr = await api("/sign-up/email", { method: "POST", body: data });
-        if (!sr.ok) { busy(btn, false); return msg(errText(sr), "error"); }
-        switchOtp(data.email, "verify", false);
-        msg("Cuenta creada. Revisa tu correo e ingresa el código de 6 dígitos.", "ok");
-        return;
-      }
-
-      if (name === "forgot") {
-        var fe = String((form.elements.namedItem("email") || {}).value || "").trim();
-        if (!fe) return msg("Escribe tu correo electrónico.", "error");
-        busy(btn, true, "Enviando…");
-        var fr = await api("/email-otp/request-password-reset", { method: "POST", body: { email: fe } });
-        busy(btn, false);
-        if (!fr.ok) return msg(errText(fr), "error");
-        switchOtp(fe, "reset", true);
-        msg("Si el correo está registrado, recibirás un código de recuperación.", "ok");
-        return;
-      }
-
-      if (name === "otp") {
-        var codeInputs = $$(".auth-otp", form);
-        var otp = codeInputs.map(function (i) { return i.value; }).join("");
-        if (otp.length !== 6) return msg("Ingresa los 6 dígitos del código.", "error");
-        busy(btn, true, otpMode === "reset" ? "Restableciendo…" : "Verificando…");
-        if (otpMode === "reset") {
-          var np = String((form.elements.namedItem("newPassword") || {}).value || "");
-          if (np.length < 8) { busy(btn, false); return msg("La nueva contraseña debe tener al menos 8 caracteres.", "error"); }
-          var rr = await api("/email-otp/reset-password", { method: "POST", body: { email: pendingEmail, otp: otp, password: np } });
-          busy(btn, false);
-          if (!rr.ok) return msg(errText(rr), "error");
-          otpMode = "verify"; pendingEmail = ""; view = "login"; render();
-          return msg("Contraseña actualizada. Inicia sesión con tu nueva contraseña.", "ok");
-        }
-        var vr = await api("/email-otp/verify-email", { method: "POST", body: { email: pendingEmail, otp: otp } });
-        busy(btn, false);
-        if (!vr.ok) return msg(errText(vr), "error");
-        await refreshSession();
-        if (session) { view = "account"; render(); msg("¡Correo verificado! Bienvenido a NexGen Tax Pro.", "ok"); }
-        else { view = "login"; render(); msg("Correo verificado. Ya puedes iniciar sesión.", "ok"); }
-        return;
-      }
-    });
-
-    var boxes = $$(".auth-otp", form);
-    boxes.forEach(function (box, idx) {
-      box.addEventListener("input", function () {
-        box.value = box.value.replace(/\D/g, "").slice(-1);
-        if (box.value && idx < boxes.length - 1) boxes[idx + 1].focus();
-      });
-      box.addEventListener("keydown", function (e) {
-        if (e.key === "Backspace" && !box.value && idx > 0) boxes[idx - 1].focus();
-        if (e.key === "ArrowLeft" && idx > 0) boxes[idx - 1].focus();
-        if (e.key === "ArrowRight" && idx < boxes.length - 1) boxes[idx + 1].focus();
-      });
-    });
-    if (boxes.length) {
-      form.addEventListener("paste", function (e) {
-        var txt = (e.clipboardData || window.clipboardData).getData("text") || "";
-        var digits = txt.replace(/\D/g, "").slice(0, 6);
-        if (!digits) return;
-        e.preventDefault();
-        digits.split("").forEach(function (d, i) { if (boxes[i]) boxes[i].value = d; });
-        if (boxes[Math.min(digits.length, 6) - 1]) boxes[Math.min(digits.length, 6) - 1].focus();
-      });
-    }
-
-    var resend = $("[data-resend]", form);
-    if (resend) {
-      resend.addEventListener("click", async function () {
-        if (resend.disabled) return;
-        resend.disabled = true;
-        var ok = await sendOtp(pendingEmail, otpMode === "reset" ? "forget-password" : "email-verification");
-        if (ok) { startCooldown(60); msg("Código reenviado. Revisa tu correo.", "ok"); }
-        else { resend.disabled = false; msg("No pudimos reenviar el código. Intenta de nuevo.", "error"); }
-      });
-      if (cooldownLeft > 0) startCooldown(cooldownLeft);
-    }
-
+    // 2. Cierre de sesión (VINCULADO DIRECTAMENTE EN LA VISTA DE CUENTA)
     var logout = $("[data-logout]", body);
     if (logout) {
-      logout.addEventListener("click", async function () {
+      logout.addEventListener("click", async function (e) {
+        e.preventDefault();
         busy(logout, true, "Cerrando sesión…");
         try {
           await api("/sign-out", { method: "POST", body: {} });
         } catch (err) {
-          console.error("Logout error:", err);
+          console.error("Logout API error:", err);
         }
         session = null;
         updateChrome();
@@ -377,8 +258,135 @@
         msg("Has cerrado sesión exitosamente.", "ok");
         setTimeout(function () {
           location.reload();
-        }, 400);
+        }, 300);
       });
+    }
+
+    // 3. Manejo de formularios (Login, Registro, Recuperar, OTP)
+    var form = $("[data-form]", body);
+    if (form) {
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var btn = $(".auth-submit", form);
+        var name = form.dataset.form;
+
+        if (name === "login") {
+          var email = (form.elements.namedItem("email") || {}).value;
+          var pass = (form.elements.namedItem("password") || {}).value;
+          email = String(email || "").trim();
+          if (!email || !pass) return msg("Completa tu correo y contraseña.", "error");
+          busy(btn, true, "Entrando…");
+          var r = await api("/sign-in/email", { method: "POST", body: { email: email, password: pass } });
+          if (r.ok) {
+            await refreshSession();
+            if (session) { view = "account"; render(); }
+            else { view = "login"; render(); msg("Sesión iniciada. Recargando…", "ok"); setTimeout(function () { location.reload(); }, 800); }
+            return;
+          }
+          busy(btn, false);
+          var code = (r.data && r.data.code) || "";
+          if (code === "EMAIL_NOT_VERIFIED" || /verif/i.test(errText(r))) {
+            var sent = await sendOtp(email, "email-verification");
+            switchOtp(email, "verify", sent);
+            if (!sent) msg("Tu correo requiere verificación. Pulsa «Reenviar código».", "error");
+            return;
+          }
+          msg(errText(r), "error");
+          return;
+        }
+
+        if (name === "signup") {
+          var el = function (n) { return form.elements.namedItem(n); };
+          var data = {
+            name: String((el("name") || {}).value || "").trim(),
+            email: String((el("email") || {}).value || "").trim(),
+            password: String((el("password") || {}).value || ""),
+            phone: String((el("phone") || {}).value || "").trim() || undefined,
+            officeName: String((el("officeName") || {}).value || "").trim() || undefined
+          };
+          if (!data.name) return msg("Escribe tu nombre completo.", "error");
+          if (!data.email) return msg("Escribe tu correo electrónico.", "error");
+          if (data.password.length < 8) return msg("La contraseña debe tener al menos 8 caracteres.", "error");
+          busy(btn, true, "Creando cuenta…");
+          var sr = await api("/sign-up/email", { method: "POST", body: data });
+          if (!sr.ok) { busy(btn, false); return msg(errText(sr), "error"); }
+          switchOtp(data.email, "verify", false);
+          msg("Cuenta creada. Revisa tu correo e ingresa el código de 6 dígitos.", "ok");
+          return;
+        }
+
+        if (name === "forgot") {
+          var fe = String((form.elements.namedItem("email") || {}).value || "").trim();
+          if (!fe) return msg("Escribe tu correo electrónico.", "error");
+          busy(btn, true, "Enviando…");
+          var fr = await api("/email-otp/request-password-reset", { method: "POST", body: { email: fe } });
+          busy(btn, false);
+          if (!fr.ok) return msg(errText(fr), "error");
+          switchOtp(fe, "reset", true);
+          msg("Si el correo está registrado, recibirás un código de recuperación.", "ok");
+          return;
+        }
+
+        if (name === "otp") {
+          var codeInputs = $$(".auth-otp", form);
+          var otp = codeInputs.map(function (i) { return i.value; }).join("");
+          if (otp.length !== 6) return msg("Ingresa los 6 dígitos del código.", "error");
+          busy(btn, true, otpMode === "reset" ? "Restableciendo…" : "Verificando…");
+          if (otpMode === "reset") {
+            var np = String((form.elements.namedItem("newPassword") || {}).value || "");
+            if (np.length < 8) { busy(btn, false); return msg("La nueva contraseña debe tener al menos 8 caracteres.", "error"); }
+            var rr = await api("/email-otp/reset-password", { method: "POST", body: { email: pendingEmail, otp: otp, password: np } });
+            busy(btn, false);
+            if (!rr.ok) return msg(errText(rr), "error");
+            otpMode = "verify"; pendingEmail = ""; view = "login"; render();
+            return msg("Contraseña actualizada. Inicia sesión con tu nueva contraseña.", "ok");
+          }
+          var vr = await api("/email-otp/verify-email", { method: "POST", body: { email: pendingEmail, otp: otp } });
+          busy(btn, false);
+          if (!vr.ok) return msg(errText(vr), "error");
+          await refreshSession();
+          if (session) { view = "account"; render(); msg("¡Correo verificado! Bienvenido a NexGen Tax Pro.", "ok"); }
+          else { view = "login"; render(); msg("Correo verificado. Ya puedes iniciar sesión.", "ok"); }
+          return;
+        }
+      });
+
+      // OTP boxes logic
+      var boxes = $$(".auth-otp", form);
+      boxes.forEach(function (box, idx) {
+        box.addEventListener("input", function () {
+          box.value = box.value.replace(/\D/g, "").slice(-1);
+          if (box.value && idx < boxes.length - 1) boxes[idx + 1].focus();
+        });
+        box.addEventListener("keydown", function (e) {
+          if (e.key === "Backspace" && !box.value && idx > 0) boxes[idx - 1].focus();
+          if (e.key === "ArrowLeft" && idx > 0) boxes[idx - 1].focus();
+          if (e.key === "ArrowRight" && idx < boxes.length - 1) boxes[idx + 1].focus();
+        });
+      });
+      if (boxes.length) {
+        form.addEventListener("paste", function (e) {
+          var txt = (e.clipboardData || window.clipboardData).getData("text") || "";
+          var digits = txt.replace(/\D/g, "").slice(0, 6);
+          if (!digits) return;
+          e.preventDefault();
+          digits.split("").forEach(function (d, i) { if (boxes[i]) boxes[i].value = d; });
+          if (boxes[Math.min(digits.length, 6) - 1]) boxes[Math.min(digits.length, 6) - 1].focus();
+        });
+      }
+
+      // Reenviar código
+      var resend = $("[data-resend]", form);
+      if (resend) {
+        resend.addEventListener("click", async function () {
+          if (resend.disabled) return;
+          resend.disabled = true;
+          var ok = await sendOtp(pendingEmail, otpMode === "reset" ? "forget-password" : "email-verification");
+          if (ok) { startCooldown(60); msg("Código reenviado. Revisa tu correo.", "ok"); }
+          else { resend.disabled = false; msg("No pudimos reenviar el código. Intenta de nuevo.", "error"); }
+        });
+        if (cooldownLeft > 0) startCooldown(cooldownLeft);
+      }
     }
   }
 
@@ -465,6 +473,24 @@
       var o = $("#auth-ov");
       if (e.key === "Escape" && o && !o.hidden) closeAuth();
     });
+var modalBody = $("#auth-body");
+    if (modalBody) {
+      modalBody.addEventListener("click", async function (e) {
+        var btn = e.target && e.target.closest && e.target.closest("[data-logout]");
+        if (!btn || btn.disabled) return;
+        busy(btn, true, "Cerrando sesión…");
+        try {
+          await api("/sign-out", { method: "POST", body: {} });
+        } catch (err) {
+          console.error("Logout delegation error:", err);
+        }
+        session = null;
+        updateChrome();
+        view = "login";
+        render();
+        setTimeout(function () { location.reload(); }, 300);
+      });
+    }
     refreshSession();
   }
 
