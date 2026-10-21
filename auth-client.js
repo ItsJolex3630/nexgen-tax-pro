@@ -30,10 +30,11 @@
   /* ---------------- API ---------------- */
   async function api(path, opts) {
     opts = opts || {};
-    var init = { method: opts.method || "GET", credentials: "include", headers: { accept: "application/json" } };
-    if (opts.body) {
+    var method = (opts.method || "GET").toUpperCase();
+    var init = { method: method, credentials: "include", headers: { accept: "application/json" } };
+    if (method !== "GET" && method !== "HEAD") {
       init.headers["content-type"] = "application/json";
-      init.body = JSON.stringify(opts.body);
+      init.body = JSON.stringify(opts.body || {});
     }
     try {
       var res = await fetch(API + path, init);
@@ -105,14 +106,36 @@
   }
 
   function updateChrome() {
-    var label = session ? firstName(session.user.name) : "Portal Clientes";
+    var u = session && session.user;
+    var label = u ? firstName(u.name) : "Portal Clientes";
+    var emailInitial = u && u.email ? u.email.trim().charAt(0).toUpperCase() : "";
+
     $$("[data-auth-label]").forEach(function (el) { el.textContent = label; });
+
     var btn = $("#auth-btn");
-    if (btn) btn.classList.toggle("auth-active", !!session);
+    if (btn) {
+      btn.classList.toggle("auth-active", !!session);
+      btn.classList.toggle("has-user", !!session);
+      btn.setAttribute("aria-label", session ? "Mi cuenta · " + u.email : "Portal de Clientes");
+    }
+
     var ic = $("#auth-ic");
-    if (ic) ic.textContent = session ? "✓" : "👤";
+    if (ic) {
+      if (session && emailInitial) {
+        ic.textContent = emailInitial;
+        ic.className = "auth-initial";
+      } else {
+        ic.textContent = "👤";
+        ic.className = "auth-silhouette";
+      }
+    }
+
     $$("[data-auth-open]").forEach(function (b) {
-      b.setAttribute("aria-label", session ? "Mi cuenta · " + session.user.email : "Portal de Clientes");
+      b.setAttribute("aria-label", session ? "Mi cuenta · " + (u.email || "") : "Portal de Clientes");
+      if (b !== btn) {
+        var labelEl = b.querySelector("[data-auth-label]");
+        if (labelEl) labelEl.textContent = label;
+      }
     });
   }
 
@@ -341,12 +364,20 @@
     var logout = $("[data-logout]", body);
     if (logout) {
       logout.addEventListener("click", async function () {
-        busy(logout, true, "Saliendo…");
-        await api("/sign-out", { method: "POST" });
+        busy(logout, true, "Cerrando sesión…");
+        try {
+          await api("/sign-out", { method: "POST", body: {} });
+        } catch (err) {
+          console.error("Logout error:", err);
+        }
         session = null;
         updateChrome();
         view = "login";
         render();
+        msg("Has cerrado sesión exitosamente.", "ok");
+        setTimeout(function () {
+          location.reload();
+        }, 400);
       });
     }
   }
