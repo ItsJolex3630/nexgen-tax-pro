@@ -1,0 +1,14 @@
+.dev.vars
+.env
+.env.*
+*.local
+functions
+node_modules
+package.json
+package-lock.json
+drizzle.config.ts
+wrangler.jsonc
+README.md
+.git
+.gitignore
+.wrangler

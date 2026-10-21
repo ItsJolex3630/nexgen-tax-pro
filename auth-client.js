@@ -51,20 +51,25 @@
     EMAIL_NOT_VERIFIED: "Debes verificar tu correo antes de iniciar sesión.",
     USER_ALREADY_EXISTS: "Ya existe una cuenta con este correo.",
     USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: "Ya existe una cuenta con este correo.",
+    USER_NOT_FOUND: "No encontramos ninguna cuenta registrada con este correo.",
     PASSWORD_TOO_SHORT: "La contraseña debe tener al menos 8 caracteres.",
     PASSWORD_TOO_LONG: "La contraseña es demasiado larga.",
     INVALID_EMAIL: "El correo electrónico no es válido.",
-    INVALID_PASSWORD: "La contraseña es incorrecta.",
-    INVALID_OTP: "El código es incorrecto. Revisa e intenta de nuevo.",
-    OTP_EXPIRED: "El código expiró. Solicita uno nuevo.",
-    TOO_MANY_ATTEMPTS: "Demasiados intentos. Espera un momento y vuelve a intentarlo.",
+    INVALID_PASSWORD: "La contraseña actual es incorrecta.",
+    INVALID_OTP: "El código es incorrecto. Verifica los 6 dígitos e intenta de nuevo.",
+    OTP_EXPIRED: "El código expiró. Pulsa «Reenviar código» para obtener uno nuevo.",
+    TOO_MANY_ATTEMPTS: "Demasiados intentos fallidos. Solicita un código nuevo.",
     FAILED_TO_SEND_OTP: "No pudimos enviar el correo. Intenta de nuevo en unos segundos.",
     EMAIL_SEND_FAILED: "No pudimos enviar el correo. Intenta de nuevo en unos segundos.",
+    INVALID_ORIGIN: "Error de validación de dominio. Recarga la página e intenta de nuevo.",
     SESSION_EXPIRED: "Tu sesión expiró. Inicia sesión de nuevo."
   };
 
   function errText(res) {
-    var d = res && res.data ? res.data : {};
+    if (!res) return "No pudimos procesar la solicitud. Intenta de nuevo.";
+    if (res.status === 429) return "Demasiados intentos seguidos. Espera un minuto y vuelve a intentarlo.";
+    if (res.status === 405) return "El servicio de autenticación se está actualizando. Recarga la página en unos segundos.";
+    var d = res.data || {};
     var code = d.code || (d.error && d.error.code) || "";
     if (ERROR_MAP[code]) return ERROR_MAP[code];
     var msg = d.message || (d.error && d.error.message) || "";
@@ -72,10 +77,12 @@
     if (/invalid.*(otp|code)/i.test(msg)) return ERROR_MAP.INVALID_OTP;
     if (/expired/i.test(msg)) return ERROR_MAP.OTP_EXPIRED;
     if (/too many/i.test(msg)) return ERROR_MAP.TOO_MANY_ATTEMPTS;
+    if (/user not found/i.test(msg)) return ERROR_MAP.USER_NOT_FOUND;
+    if (/origin/i.test(msg)) return ERROR_MAP.INVALID_ORIGIN;
     if (/password/i.test(msg) && /short|least|minimum/i.test(msg)) return ERROR_MAP.PASSWORD_TOO_SHORT;
     if (/already exists|already registered/i.test(msg)) return ERROR_MAP.USER_ALREADY_EXISTS;
     if (/invalid email or password/i.test(msg)) return ERROR_MAP.INVALID_EMAIL_OR_PASSWORD;
-    return msg || "Ocurrió un error inesperado. Intenta de nuevo.";
+    return msg || "Ocurrió un error al procesar tu solicitud (código " + (res.status || 0) + "). Intenta de nuevo.";
   }
 
   function msg(text, kind) {
@@ -310,8 +317,8 @@ function bindView(body) {
           busy(btn, true, "Creando cuenta…");
           var sr = await api("/sign-up/email", { method: "POST", body: data });
           if (!sr.ok) { busy(btn, false); return msg(errText(sr), "error"); }
-          switchOtp(data.email, "verify", false);
-          msg("Cuenta creada. Revisa tu correo e ingresa el código de 6 dígitos.", "ok");
+          switchOtp(data.email, "verify", true);
+          msg("Cuenta creada. Te enviamos un código de 6 dígitos a tu correo.", "ok");
           return;
         }
 
@@ -336,9 +343,21 @@ function bindView(body) {
             var np = String((form.elements.namedItem("newPassword") || {}).value || "");
             if (np.length < 8) { busy(btn, false); return msg("La nueva contraseña debe tener al menos 8 caracteres.", "error"); }
             var rr = await api("/email-otp/reset-password", { method: "POST", body: { email: pendingEmail, otp: otp, password: np } });
+            if (!rr.ok) { busy(btn, false); return msg(errText(rr), "error"); }
+            var resetEmail = pendingEmail;
+            otpMode = "verify"; pendingEmail = "";
+            var autoLogin = await api("/sign-in/email", { method: "POST", body: { email: resetEmail, password: np } });
             busy(btn, false);
-            if (!rr.ok) return msg(errText(rr), "error");
-            otpMode = "verify"; pendingEmail = ""; view = "login"; render();
+            if (autoLogin.ok) {
+              await refreshSession();
+              if (session) {
+                view = "account";
+                render();
+                return msg("¡Contraseña actualizada y sesión iniciada!", "ok");
+              }
+            }
+            view = "login";
+            render();
             return msg("Contraseña actualizada. Inicia sesión con tu nueva contraseña.", "ok");
           }
           var vr = await api("/email-otp/verify-email", { method: "POST", body: { email: pendingEmail, otp: otp } });
@@ -376,14 +395,24 @@ function bindView(body) {
       }
 
       // Reenviar código
+      // Reenviar código
       var resend = $("[data-resend]", form);
       if (resend) {
         resend.addEventListener("click", async function () {
           if (resend.disabled) return;
           resend.disabled = true;
-          var ok = await sendOtp(pendingEmail, otpMode === "reset" ? "forget-password" : "email-verification");
-          if (ok) { startCooldown(60); msg("Código reenviado. Revisa tu correo.", "ok"); }
-          else { resend.disabled = false; msg("No pudimos reenviar el código. Intenta de nuevo.", "error"); }
+          var rResend = otpMode === "reset"
+            ? await api("/email-otp/request-password-reset", { method: "POST", body: { email: pendingEmail } })
+            : await api("/email-otp/send-verification-otp", { method: "POST", body: { email: pendingEmail, type: "email-verification" } });
+          if (rResend.ok) {
+            boxes.forEach(function (b) { b.value = ""; });
+            if (boxes[0]) boxes[0].focus();
+            startCooldown(60);
+            msg("Nuevo código enviado. Revisa tu bandeja de entrada.", "ok");
+          } else {
+            resend.disabled = false;
+            msg(errText(rResend), "error");
+          }
         });
         if (cooldownLeft > 0) startCooldown(cooldownLeft);
       }
