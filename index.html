@@ -301,7 +301,30 @@ footer.ft{background:#080706;color:#cfc8b6;padding:56px 0 calc(110px + env(safe-
 .ft a{text-decoration:none;color:#e5dfcf}
 .ft a:hover{color:var(--gold-hi);text-decoration:underline}
 .ft img{height:56px;width:auto;margin-bottom:14px}
-.ft .fine{grid-column:1/-1;border-top:1px solid var(--lined);padding-top:20px;font-size:.8125rem;color:#9b9486;display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:space-between}
+.ft .fine{grid-column:1/-1;border-top:1px solid var(--lined);padding-top:22px;font-size:.8125rem;color:#9b9486;display:flex;flex-wrap:wrap;gap:14px 24px;justify-content:space-between;align-items:center}
+.ft .fine-copy{color:#8a8375}
+
+/* Sello institucional By VENDO */
+.ft-vendo{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;background:linear-gradient(145deg,#1c1813,#12100d);border:1px solid rgba(201,162,75,.32);border-radius:99px;padding:6px 14px 6px 16px;box-shadow:0 8px 24px -10px #000,0 0 16px -6px rgba(201,162,75,.25);transition:border-color .25s ease,box-shadow .25s ease}
+.ft-vendo:hover{border-color:var(--gold-hi);box-shadow:0 10px 28px -8px #000,0 0 24px -4px rgba(201,162,75,.45)}
+.ft-vendo-title{display:inline-flex;align-items:center;gap:6px;font:700 .78rem var(--sans);letter-spacing:.04em;color:#e8dfcc;text-transform:uppercase}
+.ft-vendo-title b{color:var(--gold-hi);font-weight:900}
+.ft-vendo-spark{color:var(--gold-hi);font-size:.85rem;animation:tb 1.8s infinite}
+.ft-vendo-links{display:flex;align-items:center;gap:8px}
+.ft-vendo-a{display:inline-flex;align-items:center;gap:5px;font:600 .75rem var(--sans);color:#c9beaa;background:rgba(255,255,255,.05);border:1px solid rgba(201,162,75,.25);padding:4px 10px;border-radius:99px;text-decoration:none;transition:background-color .2s,color .2s,border-color .2s}
+.ft-vendo-a:hover{background:rgba(201,162,75,.18);color:#fff;border-color:var(--gold-hi);text-decoration:none}
+.ft-vendo-a svg{width:13px;height:13px;color:var(--gold-hi);flex:none}
+
+/* Marca de autoría final "Vendo estuvo aquí" */
+.wmk-vendo{grid-column:1/-1;margin-top:14px;padding:12px 18px;border-radius:14px;background:radial-gradient(ellipse at 50% 50%,#1c1813 0%,#0f0d0a 100%);border:1px dashed rgba(201,162,75,.28);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;font-size:.75rem;color:#8f8777}
+.wmk-vendo p{margin:0;display:flex;align-items:center;gap:8px}
+.wmk-badge{font:800 .68rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:#181308;background:linear-gradient(135deg,var(--gold-hi),var(--gold));border-radius:4px;padding:2px 7px}
+.wmk-vendo a{color:var(--gold-hi);text-decoration:none;font-weight:600}
+.wmk-vendo a:hover{text-decoration:underline}
+@media(max-width:760px){
+  .ft .fine{flex-direction:column;align-items:flex-start}
+  .wmk-vendo{flex-direction:column;align-items:flex-start}
+}
 /* inner page hero */
 .ph-hero{padding:62px 0 54px;background:radial-gradient(800px 340px at 85% 0,#2a2317,#0c0b09 68%)}
 .ph-hero .h1{font-size:clamp(2.3rem,5.4vw,4rem);max-width:18ch}
@@ -1284,7 +1307,30 @@ dialog{border:0;padding:0;background:transparent;max-width:none;max-height:none}
    <li><a data-tel="team"><span data-ph="team"></span></a> <span style="color:#9b9486" data-i18n="ft.tm">· team</span></li>
    <li><a data-mail><span data-ph="mail"></span></a></li>
    <li><span data-i18n="ct.ad">Serving Florida &amp; all 50 States · Digital Office</span></li></ul></div>
-  <div class="fine"><span>© 2026 NexGen Tax Pro. All rights reserved.</span></div>
+  <div class="fine">
+   <span class="fine-copy">© 2026 NexGen Tax Pro. All rights reserved.</span>
+   <div class="ft-vendo">
+    <span class="ft-vendo-title"><span class="ft-vendo-spark">✦</span> By <b data-i18n="ft.by">VENDO</b></span>
+    <div class="ft-vendo-links">
+     <a href="https://somosvendo.pages.dev/" target="_blank" rel="noopener noreferrer" class="ft-vendo-a" aria-label="Web oficial de VENDO">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span>somosvendo.pages.dev</span>
+     </a>
+     <a href="https://www.instagram.com/somosvendo.ve/" target="_blank" rel="noopener noreferrer" class="ft-vendo-a" aria-label="Instagram de VENDO">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+      <span>@somosvendo.ve</span>
+     </a>
+    </div>
+   </div>
+   <div class="wmk-vendo" role="note">
+    <p><span class="wmk-badge">VENDO</span> <span data-i18n="wmk.here">VENDO estuvo aquí — Diseño, arquitectura y desarrollo de software</span></p>
+    <div>
+     <a href="https://somosvendo.pages.dev/" target="_blank" rel="noopener noreferrer" data-i18n="wmk.web">Sitio Web Oficial ↗</a>
+     <span style="margin:0 6px;color:rgba(201,162,75,.4)">·</span>
+     <a href="https://www.instagram.com/somosvendo.ve/" target="_blank" rel="noopener noreferrer" data-i18n="wmk.ig">Instagram @somosvendo.ve ↗</a>
+    </div>
+   </div>
+  </div>
  </div>
 </footer>
 
@@ -1578,6 +1624,10 @@ const D={
 /* footer */
 'ft.tag':['People | Technology | A brighter tomorrow','Personas | Tecnología | Un mañana más brillante'],'ft.ex':['Explore','Explorar'],'ft.lg':['Legal','Legal'],'ft.lang':['Language','Idioma'],'ft.ct':['Contact','Contacto'],
 'ft.sw':['· software & demos','· software y demos'],'ft.tm':['· team','· equipo'],
+'ft.by':['VENDO','VENDO'],
+'wmk.here':['VENDO was here — Software design, architecture and development','VENDO estuvo aquí — Diseño, arquitectura y desarrollo de software'],
+'wmk.web':['Official Website ↗','Sitio Web Oficial ↗'],
+'wmk.ig':['Instagram @somosvendo.ve ↗','Instagram @somosvendo.ve ↗'],
 'lg.eb':['Legal','Legal'],'pv.h1':['Privacy *Policy*','Política de *privacidad*'],'tm.h1':['Terms of *Use*','Términos de *uso*'],'ac.h1':['Accessibility *Statement*','Declaración de *accesibilidad*'],
 'pv.nav':['Privacy','Privacidad'],'tm.nav':['Terms','Términos'],'ac.nav':['Accessibility','Accesibilidad'],
 /* assistant */
