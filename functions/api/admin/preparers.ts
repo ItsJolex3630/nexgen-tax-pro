@@ -47,7 +47,7 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
   const url = new URL(context.request.url);
 
   if (method === "GET") {
-    const rows = await db
+    const [rows, noteRows] = await Promise.all([db
       .select({
         userId: schema.users.id,
         name: schema.users.name,
@@ -70,7 +70,9 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
       })
       .from(schema.users)
       .leftJoin(schema.preparerProfiles, eq(schema.users.id, schema.preparerProfiles.userId))
-      .orderBy(desc(schema.users.createdAt));
+      .orderBy(desc(schema.users.createdAt)),
+      db.select().from(schema.adminNotes).orderBy(desc(schema.adminNotes.createdAt)),
+    ]);
 
     const q = (url.searchParams.get("q") || "").toLowerCase();
     const efinStatus = url.searchParams.get("efinStatus") || "";
@@ -94,6 +96,14 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
         bankPartner: row.bankPartner || "none",
         season: row.season || "2026",
         updatedAt: row.profileUpdatedAt || row.userCreatedAt,
+        notesLog: noteRows
+          .filter((note) => note.entityType === "preparer" && note.entityId === row.userId)
+          .map((note) => ({
+            id: note.id,
+            authorName: note.authorName,
+            content: note.content,
+            createdAt: note.createdAt,
+          })),
       }))
       .filter((row) => (efinStatus ? row.efinStatus === efinStatus : true))
       .filter((row) => (licenseType ? row.licenseType === licenseType : true))
@@ -265,6 +275,23 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
     if (body.bankPartner !== undefined && !allowed(BANK_PARTNERS, body.bankPartner)) {
       return json({ error: "Banco aliado no válido." }, 400);
     }
+    if (body.name !== undefined && !text(body.name)) {
+      return json({ error: "El nombre es obligatorio." }, 400);
+    }
+    if (body.email !== undefined) {
+      const email = text(body.email).toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return json({ error: "El correo no tiene un formato válido." }, 400);
+      }
+      const conflict = await db
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.email, email))
+        .limit(1);
+      if (conflict.length && conflict[0].id !== userId) {
+        return json({ error: "Ya existe otro usuario con ese correo." }, 409);
+      }
+    }
 
     const profilePatch: Partial<typeof schema.preparerProfiles.$inferInsert> = { updatedAt: new Date() };
     if (body.ptin !== undefined) profilePatch.ptin = text(body.ptin) || null;
@@ -305,6 +332,10 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
           .returning();
 
     const userPatch: Partial<typeof schema.users.$inferInsert> = { updatedAt: new Date() };
+    if (body.name !== undefined) userPatch.name = text(body.name);
+    if (body.email !== undefined) userPatch.email = text(body.email).toLowerCase();
+    if (body.phone !== undefined) userPatch.phone = text(body.phone) || null;
+    if (body.officeName !== undefined) userPatch.officeName = text(body.officeName) || null;
     if (body.ptin !== undefined) userPatch.ptin = text(body.ptin) || null;
     if (body.efin !== undefined) userPatch.efin = text(body.efin) || null;
     if (Object.keys(userPatch).length > 1) {
@@ -324,6 +355,32 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
     }
 
     return json({ profile });
+  }
+
+  if (method === "DELETE") {
+    const body = await readBody(context.request);
+    const noteId = text(body.noteId) || url.searchParams.get("noteId") || "";
+    if (noteId) {
+      await db.delete(schema.adminNotes).where(eq(schema.adminNotes.id, noteId));
+      return json({ ok: true });
+    }
+
+    const userId = text(body.userId) || url.searchParams.get("userId") || "";
+    if (!userId) return json({ error: "Falta el usuario del preparador." }, 400);
+
+    const userRows = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
+    if (!userRows.length) return json({ error: "Preparador no encontrado." }, 404);
+    if (userRows[0].role === "admin") {
+      return json({ error: "No se puede eliminar una cuenta administradora." }, 403);
+    }
+
+    await db.transaction(async (tx) => {
+      await tx.delete(schema.adminNotes).where(eq(schema.adminNotes.entityId, userId));
+      await tx.delete(schema.preparerProfiles).where(eq(schema.preparerProfiles.userId, userId));
+      await tx.delete(schema.users).where(eq(schema.users.id, userId));
+    });
+
+    return json({ ok: true });
   }
 
   return json({ error: "Método no permitido." }, 405);

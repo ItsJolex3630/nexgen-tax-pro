@@ -34,13 +34,66 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
   }
 
   const db = createDb(context.env);
-  const [leadRows, profileRows, invoiceRows, noteRows, financialRows] = await Promise.all([
+  const [leadRows, profileRows, invoiceRows, noteRows, initialFinancialRows] = await Promise.all([
     safe(() => db.select().from(schema.leads), []),
     safe(() => db.select().from(schema.preparerProfiles), []),
     safe(() => db.select().from(schema.invoices), []),
     safe(() => db.select().from(schema.adminNotes), []),
     safe(() => db.select().from(schema.financialRecords), []),
   ]);
+
+  let financialRows = initialFinancialRows;
+  const existingFinanceIds = new Set(financialRows.map((row) => row.id));
+  const reconciliation: Array<typeof schema.financialRecords.$inferInsert> = [];
+
+  for (const lead of leadRows) {
+    if (lead.status !== "won" || Number(lead.estimatedValue) <= 0) continue;
+    const finId = `lead_${lead.id}`;
+    if (existingFinanceIds.has(finId)) continue;
+    reconciliation.push({
+      id: finId,
+      type: "income",
+      category: "software_taxwise",
+      categoryDetail: null,
+      description: `Venta cerrada (Lead): ${lead.name}`,
+      amount: Number(lead.estimatedValue),
+      date: lead.updatedAt,
+      season: "2026",
+      status: "paid",
+      paymentMethod: "zelle",
+      notes: lead.officeName ? `Oficina: ${lead.officeName}` : null,
+      createdAt: new Date(),
+    });
+  }
+
+  for (const invoice of invoiceRows) {
+    if (invoice.status !== "paid" || Number(invoice.amount) <= 0) continue;
+    const finId = `inv_${invoice.id}`;
+    if (existingFinanceIds.has(finId)) continue;
+    reconciliation.push({
+      id: finId,
+      type: "income",
+      category: "software_taxwise",
+      categoryDetail: null,
+      description: `Factura pagada: ${invoice.customerName} (${invoice.package})`,
+      amount: Number(invoice.amount),
+      date: invoice.paidAt || invoice.createdAt,
+      season: "2026",
+      status: "paid",
+      paymentMethod: "bank_transfer",
+      notes: invoice.notes || null,
+      createdAt: new Date(),
+    });
+  }
+
+  if (reconciliation.length) {
+    try {
+      await db.insert(schema.financialRecords).values(reconciliation).onConflictDoNothing();
+      financialRows = await db.select().from(schema.financialRecords);
+    } catch (err) {
+      console.error("[admin/stats] finance reconciliation failed", err);
+    }
+  }
 
   const now = Date.now();
   const paidInvoices = invoiceRows.filter((invoice) => invoice.status === "paid");
@@ -50,15 +103,17 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
     .reduce((sum, invoice) => sum + Number(invoice.amount || 0), 0);
   const financeIncomeRows = financialRows.filter((row) => row.type === "income");
   const financeExpenseRows = financialRows.filter((row) => row.type === "expense");
-  const financeIncome = financeIncomeRows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
-  const financeExpense = financeExpenseRows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+  const paidIncomeRows = financeIncomeRows.filter((row) => row.status === "paid");
+  const paidExpenseRows = financeExpenseRows.filter((row) => row.status === "paid");
+  const financeIncome = paidIncomeRows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+  const financeExpense = paidExpenseRows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
   const pendingFinanceIncome = financeIncomeRows
     .filter((row) => row.status === "pending")
     .reduce((sum, row) => sum + Number(row.amount || 0), 0);
   const pendingFinanceExpense = financeExpenseRows
     .filter((row) => row.status === "pending")
     .reduce((sum, row) => sum + Number(row.amount || 0), 0);
-  const totalRevenue = invoiceRevenue + financeIncome;
+  const totalRevenue = financeIncome;
   const totalExpenses = financeExpense;
   const netProfit = totalRevenue - totalExpenses;
   const profitMargin = totalRevenue ? Math.round((netProfit / totalRevenue) * 1000) / 10 : 0;
@@ -89,12 +144,9 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
     const month = new Date(base);
     month.setUTCMonth(base.getUTCMonth() - index);
     const key = monthKey(month);
-    const revenue = paidInvoices
-      .filter((invoice) => monthKey(new Date(invoice.paidAt || invoice.createdAt)) === key)
-      .reduce((sum, invoice) => sum + Number(invoice.amount || 0), 0) +
-      financeIncomeRows
-        .filter((row) => monthKey(new Date(row.date)) === key)
-        .reduce((sum, row) => sum + Number(row.amount || 0), 0);
+    const revenue = paidIncomeRows
+      .filter((row) => monthKey(new Date(row.date)) === key)
+      .reduce((sum, row) => sum + Number(row.amount || 0), 0);
     const seasonal = [1.6, 1.8, 1.55, 1.2, 0.55, 0.35, 0.3, 0.3, 0.4, 0.55, 0.8, 1.1][month.getUTCMonth()];
     const efile = Math.round(activeLicenses * seasonal * 18);
     months.push({

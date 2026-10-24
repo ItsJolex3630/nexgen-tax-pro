@@ -46,8 +46,8 @@ async function readBody(request: Request): Promise<Record<string, unknown>> {
 function summarize(rows: Array<typeof schema.financialRecords.$inferSelect>) {
   const income = rows.filter((row) => row.type === "income");
   const expense = rows.filter((row) => row.type === "expense");
-  const totalIncome = income.reduce((sum, row) => sum + Number(row.amount || 0), 0);
-  const totalExpense = expense.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+  const totalIncome = income.filter((row) => row.status === "paid").reduce((sum, row) => sum + Number(row.amount || 0), 0);
+  const totalExpense = expense.filter((row) => row.status === "paid").reduce((sum, row) => sum + Number(row.amount || 0), 0);
   const netProfit = totalIncome - totalExpense;
   const profitMargin = totalIncome ? Math.round((netProfit / totalIncome) * 1000) / 10 : 0;
   return {
@@ -146,6 +146,93 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
     return json({ record }, 201);
   }
 
+  if (method === "PATCH") {
+    const body = await readBody(context.request);
+    const id = text(body.id) || url.searchParams.get("id") || "";
+    if (!id) return json({ error: "Falta el id del movimiento." }, 400);
+    const existing = await db
+      .select()
+      .from(schema.financialRecords)
+      .where(eq(schema.financialRecords.id, id))
+      .limit(1);
+    if (!existing.length) return json({ error: "Movimiento no encontrado." }, 404);
+
+    const current = existing[0];
+    const patch: Partial<typeof schema.financialRecords.$inferInsert> = {};
+
+    if (body.type !== undefined) {
+      if (!TYPES.includes(text(body.type) as FinanceType)) {
+        return json({ error: "El tipo debe ser income o expense." }, 400);
+      }
+      patch.type = text(body.type) as FinanceType;
+    }
+
+    const nextCategory = body.category !== undefined ? text(body.category) : current.category;
+    const nextDetail = body.categoryDetail !== undefined ? text(body.categoryDetail) : current.categoryDetail;
+    if (body.category !== undefined && !nextCategory) {
+      return json({ error: "La categoría es obligatoria." }, 400);
+    }
+    if (nextCategory === "other" && !nextDetail) {
+      return json({ error: "Especifica el detalle cuando la categoría es Otro." }, 400);
+    }
+    if (body.category !== undefined || body.categoryDetail !== undefined) {
+      patch.category = nextCategory;
+      patch.categoryDetail = nextCategory === "other" ? nextDetail : null;
+    }
+
+    if (body.description !== undefined) {
+      const description = text(body.description);
+      if (!description) return json({ error: "La descripción es obligatoria." }, 400);
+      patch.description = description;
+    }
+    if (body.amount !== undefined) {
+      const amount = money(body.amount);
+      if (amount <= 0) return json({ error: "El monto debe ser mayor que cero." }, 400);
+      patch.amount = amount;
+    }
+    if (body.date !== undefined) {
+      const movementDate = date(body.date);
+      if (!movementDate) return json({ error: "La fecha del movimiento no es válida." }, 400);
+      patch.date = movementDate;
+    }
+    if (body.status !== undefined) {
+      if (!STATUSES.includes(text(body.status) as FinanceStatus)) {
+        return json({ error: "El estado debe ser paid o pending." }, 400);
+      }
+      patch.status = text(body.status) as FinanceStatus;
+    }
+    if (body.paymentMethod !== undefined) patch.paymentMethod = text(body.paymentMethod) || null;
+    if (body.notes !== undefined) patch.notes = text(body.notes) || null;
+    if (body.season !== undefined) patch.season = text(body.season) || "2026";
+
+    const [record] = await db
+      .update(schema.financialRecords)
+      .set(patch)
+      .where(eq(schema.financialRecords.id, id))
+      .returning();
+
+    if (id.startsWith("lead_")) {
+      await db
+        .update(schema.leads)
+        .set({ estimatedValue: record.amount, updatedAt: new Date() })
+        .where(eq(schema.leads.id, id.slice(5)));
+    }
+
+    if (id.startsWith("inv_")) {
+      const invoiceId = id.slice(4);
+      await db
+        .update(schema.invoices)
+        .set({
+          amount: record.amount,
+          status: record.status === "paid" ? "paid" : "pending",
+          paidAt: record.status === "paid" ? new Date() : null,
+        })
+        .where(eq(schema.invoices.id, invoiceId));
+    }
+
+    return json({ record });
+  }
+
   if (method === "DELETE") {
     const body = await readBody(context.request);
     const id = text(body.id) || url.searchParams.get("id") || "";
@@ -156,6 +243,20 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
       .where(eq(schema.financialRecords.id, id))
       .limit(1);
     if (!existing.length) return json({ error: "Movimiento no encontrado." }, 404);
+
+    if (id.startsWith("lead_")) {
+      await db
+        .update(schema.leads)
+        .set({ status: "lost", updatedAt: new Date() })
+        .where(eq(schema.leads.id, id.slice(5)));
+    }
+    if (id.startsWith("inv_")) {
+      await db
+        .update(schema.invoices)
+        .set({ status: "cancelled", paidAt: null })
+        .where(eq(schema.invoices.id, id.slice(4)));
+    }
+
     await db.delete(schema.financialRecords).where(eq(schema.financialRecords.id, id));
     return json({ ok: true });
   }

@@ -1,5 +1,5 @@
 import { desc, eq } from "drizzle-orm";
-import { createDb, schema, type Env } from "../../db";
+import { createDb, schema, type Database, type Env } from "../../db";
 
 interface Ctx {
   request: Request;
@@ -38,6 +38,43 @@ async function readBody(request: Request): Promise<Record<string, unknown>> {
     return body && typeof body === "object" ? (body as Record<string, unknown>) : {};
   } catch {
     return {};
+  }
+}
+
+async function syncLeadFinance(db: Database, lead: typeof schema.leads.$inferSelect): Promise<void> {
+  const finId = `lead_${lead.id}`;
+  if (lead.status === "won" && Number(lead.estimatedValue) > 0) {
+    const values = {
+      type: "income" as const,
+      category: "software_taxwise",
+      categoryDetail: null,
+      description: `Venta cerrada (Lead): ${lead.name}`,
+      amount: Number(lead.estimatedValue),
+      season: "2026",
+      status: "paid" as const,
+      paymentMethod: "zelle",
+      notes: lead.officeName ? `Oficina: ${lead.officeName}` : null,
+    };
+    const existing = await db
+      .select()
+      .from(schema.financialRecords)
+      .where(eq(schema.financialRecords.id, finId))
+      .limit(1);
+    if (existing.length) {
+      await db
+        .update(schema.financialRecords)
+        .set(values)
+        .where(eq(schema.financialRecords.id, finId));
+    } else {
+      await db.insert(schema.financialRecords).values({
+        id: finId,
+        ...values,
+        date: new Date(),
+        createdAt: new Date(),
+      });
+    }
+  } else {
+    await db.delete(schema.financialRecords).where(eq(schema.financialRecords.id, finId));
   }
 }
 
@@ -131,6 +168,7 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
       });
     }
 
+    await syncLeadFinance(db, lead);
     return json({ lead }, 201);
   }
 
@@ -142,10 +180,27 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
     const existing = await db.select().from(schema.leads).where(eq(schema.leads.id, id)).limit(1);
     if (!existing.length) return json({ error: "Prospecto no encontrado." }, 404);
 
+    if (body.name !== undefined && !text(body.name)) {
+      return json({ error: "El nombre es obligatorio." }, 400);
+    }
+    if (body.phone !== undefined && !text(body.phone)) {
+      return json({ error: "El teléfono es obligatorio." }, 400);
+    }
+    if (body.email !== undefined) {
+      const email = text(body.email).toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return json({ error: "El correo no tiene un formato válido." }, 400);
+      }
+    }
+    if (body.source !== undefined && !SOURCES.includes(text(body.source) as (typeof SOURCES)[number])) {
+      return json({ error: "El origen no es válido." }, 400);
+    }
+
     const patch: Partial<typeof schema.leads.$inferInsert> = { updatedAt: new Date() };
     if (body.name !== undefined) patch.name = text(body.name);
     if (body.email !== undefined) patch.email = text(body.email).toLowerCase();
     if (body.phone !== undefined) patch.phone = text(body.phone);
+    if (body.source !== undefined) patch.source = text(body.source);
     if (body.officeName !== undefined) patch.officeName = text(body.officeName) || null;
     if (body.topic !== undefined) patch.topic = text(body.topic) || "software";
     if (body.status !== undefined) {
@@ -176,15 +231,23 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
         .returning();
     }
 
+    await syncLeadFinance(db, lead);
     return json({ lead, note });
   }
 
   if (method === "DELETE") {
     const body = await readBody(context.request);
+    const noteId = text(body.noteId) || url.searchParams.get("noteId") || "";
+    if (noteId) {
+      await db.delete(schema.adminNotes).where(eq(schema.adminNotes.id, noteId));
+      return json({ ok: true });
+    }
+
     const id = text(body.id) || url.searchParams.get("id") || "";
     if (!id) return json({ error: "Falta el id del prospecto." }, 400);
 
     await db.delete(schema.adminNotes).where(eq(schema.adminNotes.entityId, id));
+    await db.delete(schema.financialRecords).where(eq(schema.financialRecords.id, `lead_${id}`));
     await db.delete(schema.leads).where(eq(schema.leads.id, id));
     return json({ ok: true });
   }

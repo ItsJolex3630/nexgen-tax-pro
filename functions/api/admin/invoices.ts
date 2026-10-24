@@ -1,5 +1,5 @@
 import { desc, eq } from "drizzle-orm";
-import { createDb, schema, type Env } from "../../db";
+import { createDb, schema, type Database, type Env } from "../../db";
 
 interface Ctx {
   request: Request;
@@ -38,6 +38,43 @@ async function readBody(request: Request): Promise<Record<string, unknown>> {
     return body && typeof body === "object" ? (body as Record<string, unknown>) : {};
   } catch {
     return {};
+  }
+}
+
+async function syncInvoiceFinance(db: Database, invoice: typeof schema.invoices.$inferSelect): Promise<void> {
+  const finId = `inv_${invoice.id}`;
+  if (invoice.status === "paid" && Number(invoice.amount) > 0) {
+    const values = {
+      type: "income" as const,
+      category: "software_taxwise",
+      categoryDetail: null,
+      description: `Factura pagada: ${invoice.customerName} (${invoice.package})`,
+      amount: Number(invoice.amount),
+      date: invoice.paidAt || new Date(),
+      season: "2026",
+      status: "paid" as const,
+      paymentMethod: "bank_transfer",
+      notes: invoice.notes || null,
+    };
+    const existing = await db
+      .select()
+      .from(schema.financialRecords)
+      .where(eq(schema.financialRecords.id, finId))
+      .limit(1);
+    if (existing.length) {
+      await db
+        .update(schema.financialRecords)
+        .set(values)
+        .where(eq(schema.financialRecords.id, finId));
+    } else {
+      await db.insert(schema.financialRecords).values({
+        id: finId,
+        ...values,
+        createdAt: new Date(),
+      });
+    }
+  } else {
+    await db.delete(schema.financialRecords).where(eq(schema.financialRecords.id, finId));
   }
 }
 
@@ -98,6 +135,7 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
       })
       .returning();
 
+    await syncInvoiceFinance(db, invoice);
     return json({ invoice }, 201);
   }
 
@@ -126,6 +164,7 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
     }
 
     const [invoice] = await db.update(schema.invoices).set(patch).where(eq(schema.invoices.id, id)).returning();
+    await syncInvoiceFinance(db, invoice);
     return json({ invoice });
   }
 
@@ -134,6 +173,7 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
     const id = text(body.id) || url.searchParams.get("id") || "";
     if (!id) return json({ error: "Falta el id de la factura." }, 400);
     await db.delete(schema.invoices).where(eq(schema.invoices.id, id));
+    await db.delete(schema.financialRecords).where(eq(schema.financialRecords.id, `inv_${id}`));
     return json({ ok: true });
   }
 
