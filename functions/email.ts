@@ -24,6 +24,12 @@ const TYPO_DOMAINS: Record<string, string> = {
   "icloud.co": "icloud.com", "iclud.com": "icloud.com",
 };
 
+const KNOWN_VALID_DOMAINS = new Set([
+  "gmail.com", "googlemail.com", "yahoo.com", "ymail.com", "hotmail.com",
+  "outlook.com", "live.com", "msn.com", "icloud.com", "me.com", "mac.com",
+  "aol.com", "proton.me", "protonmail.com", "zoho.com"
+]);
+
 export type EmailValidation =
   | { ok: true }
   | { ok: false; code: "format" | "test" | "disposable" | "typo" | "no-mx"; error: string; suggestion?: string };
@@ -66,6 +72,10 @@ export async function validateDeliverableEmail(email: string): Promise<EmailVali
       error: "Parece que hay un error de escritura en el dominio.",
       suggestion: local + "@" + TYPO_DOMAINS[domain],
     };
+  }
+  // Fast-path: si el dominio es un proveedor oficial reconocido, es entregable de inmediato
+  if (KNOWN_VALID_DOMAINS.has(domain)) {
+    return { ok: true };
   }
   const deliverable = await domainHasMx(domain);
   if (!deliverable) {

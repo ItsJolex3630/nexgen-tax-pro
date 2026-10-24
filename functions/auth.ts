@@ -6,7 +6,11 @@ import { eq } from "drizzle-orm";
 import { createDb, schema, type Env } from "./db";
 import { validateDeliverableEmail, sendVerificationOtpEmail } from "./email";
 
-export function createAuth(env: Env, request?: Request) {
+export function createAuth(
+  env: Env,
+  request?: Request,
+  waitUntil?: (promise: Promise<unknown>) => void
+) {
   const db = createDb(env);
 
   let dynamicBaseUrl = env.BETTER_AUTH_URL || "https://nexgen-tax-pro.pages.dev";
@@ -63,6 +67,16 @@ export function createAuth(env: Env, request?: Request) {
     },
 
     advanced: {
+      // Delegar envío de correos y tareas secundarias a context.waitUntil para respuesta instantánea (<200ms)
+      backgroundTasks: {
+        handler: (promise) => {
+          if (typeof waitUntil === "function") {
+            waitUntil(promise);
+          } else if (promise instanceof Promise) {
+            promise.catch((err) => console.error("[Auth Background Task Error]", err));
+          }
+        },
+      },
       defaultCookieAttributes: {
         httpOnly: true,
         sameSite: "lax",
