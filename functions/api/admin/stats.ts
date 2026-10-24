@@ -34,19 +34,35 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
   }
 
   const db = createDb(context.env);
-  const [leadRows, profileRows, invoiceRows, noteRows] = await Promise.all([
+  const [leadRows, profileRows, invoiceRows, noteRows, financialRows] = await Promise.all([
     safe(() => db.select().from(schema.leads), []),
     safe(() => db.select().from(schema.preparerProfiles), []),
     safe(() => db.select().from(schema.invoices), []),
     safe(() => db.select().from(schema.adminNotes), []),
+    safe(() => db.select().from(schema.financialRecords), []),
   ]);
 
   const now = Date.now();
   const paidInvoices = invoiceRows.filter((invoice) => invoice.status === "paid");
-  const totalRevenue = paidInvoices.reduce((sum, invoice) => sum + Number(invoice.amount || 0), 0);
-  const pendingRevenue = invoiceRows
+  const invoiceRevenue = paidInvoices.reduce((sum, invoice) => sum + Number(invoice.amount || 0), 0);
+  const invoicePendingRevenue = invoiceRows
     .filter((invoice) => invoice.status === "pending" || invoice.status === "installment")
     .reduce((sum, invoice) => sum + Number(invoice.amount || 0), 0);
+  const financeIncomeRows = financialRows.filter((row) => row.type === "income");
+  const financeExpenseRows = financialRows.filter((row) => row.type === "expense");
+  const financeIncome = financeIncomeRows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+  const financeExpense = financeExpenseRows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+  const pendingFinanceIncome = financeIncomeRows
+    .filter((row) => row.status === "pending")
+    .reduce((sum, row) => sum + Number(row.amount || 0), 0);
+  const pendingFinanceExpense = financeExpenseRows
+    .filter((row) => row.status === "pending")
+    .reduce((sum, row) => sum + Number(row.amount || 0), 0);
+  const totalRevenue = invoiceRevenue + financeIncome;
+  const totalExpenses = financeExpense;
+  const netProfit = totalRevenue - totalExpenses;
+  const profitMargin = totalRevenue ? Math.round((netProfit / totalRevenue) * 1000) / 10 : 0;
+  const pendingRevenue = invoicePendingRevenue + pendingFinanceIncome;
   const activeLicenses = profileRows.filter((profile) => profile.licenseType && profile.licenseType !== "none").length;
   const efinReady = profileRows.filter(
     (profile) => profile.efinStatus === "approved" && profile.wispStatus === "completed"
@@ -75,7 +91,10 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
     const key = monthKey(month);
     const revenue = paidInvoices
       .filter((invoice) => monthKey(new Date(invoice.paidAt || invoice.createdAt)) === key)
-      .reduce((sum, invoice) => sum + Number(invoice.amount || 0), 0);
+      .reduce((sum, invoice) => sum + Number(invoice.amount || 0), 0) +
+      financeIncomeRows
+        .filter((row) => monthKey(new Date(row.date)) === key)
+        .reduce((sum, row) => sum + Number(row.amount || 0), 0);
     const seasonal = [1.6, 1.8, 1.55, 1.2, 0.55, 0.35, 0.3, 0.3, 0.4, 0.55, 0.8, 1.1][month.getUTCMonth()];
     const efile = Math.round(activeLicenses * seasonal * 18);
     months.push({
@@ -128,9 +147,27 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
     stats: {
       revenue: {
         total: totalRevenue,
+        invoices: invoiceRevenue,
+        financialIncome: financeIncome,
+        expenses: totalExpenses,
+        netProfit,
+        profitMargin,
         pending: pendingRevenue,
+        pendingInvoices: invoicePendingRevenue,
+        pendingFinanceIncome,
+        pendingFinanceExpense,
         target: Math.max(100000, Math.ceil(totalRevenue / 10000) * 10000),
         progress: Math.min(100, Math.round((totalRevenue / Math.max(100000, Math.ceil(totalRevenue / 10000) * 10000)) * 100)),
+      },
+      finance: {
+        totalIncome: financeIncome,
+        totalExpense: financeExpense,
+        netProfit,
+        profitMargin,
+        pendingIncome: pendingFinanceIncome,
+        pendingExpense: pendingFinanceExpense,
+        incomeCount: financeIncomeRows.length,
+        expenseCount: financeExpenseRows.length,
       },
       licenses: {
         active: activeLicenses,

@@ -130,3 +130,19 @@ export const adminNotes = sqliteTable("admin_notes", {
   content: text("content").notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
+
+// 9. Registro Integral de Finanzas (Ingresos y Gastos)
+export const financialRecords = sqliteTable("financial_records", {
+  id: text("id").primaryKey(),
+  type: text("type", { enum: ["income", "expense"] }).notNull(),
+  category: text("category").notNull(),
+  categoryDetail: text("category_detail"),
+  description: text("description").notNull(),
+  amount: integer("amount").notNull(),
+  date: integer("date", { mode: "timestamp" }).notNull(),
+  season: text("season").default("2026"),
+  status: text("status", { enum: ["paid", "pending"] }).default("paid"),
+  paymentMethod: text("payment_method"),
+  notes: text("notes"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});

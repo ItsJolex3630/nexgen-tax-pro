@@ -116,6 +116,135 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
     });
   }
 
+  if (method === "POST") {
+    const body = await readBody(context.request);
+    const name = text(body.name);
+    const email = text(body.email).toLowerCase();
+    const phone = text(body.phone);
+    const officeName = text(body.officeName);
+    const ptin = text(body.ptin);
+    const efin = text(body.efin);
+
+    if (!name || !email) {
+      return json({ error: "Nombre y correo son obligatorios." }, 400);
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return json({ error: "El correo no tiene un formato válido." }, 400);
+    }
+    if (body.efinStatus !== undefined && !allowed(EFIN_STATUSES, body.efinStatus)) {
+      return json({ error: "Estatus EFIN no válido." }, 400);
+    }
+    if (body.wispStatus !== undefined && !allowed(WISP_STATUSES, body.wispStatus)) {
+      return json({ error: "Estatus WISP no válido." }, 400);
+    }
+    if (body.licenseType !== undefined && !allowed(LICENSE_TYPES, body.licenseType)) {
+      return json({ error: "Tipo de licencia no válido." }, 400);
+    }
+    if (body.bankPartner !== undefined && !allowed(BANK_PARTNERS, body.bankPartner)) {
+      return json({ error: "Banco aliado no válido." }, 400);
+    }
+
+    const now = new Date();
+    const result = await db.transaction(async (tx) => {
+      const existingUser = await tx.select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
+      const userId = existingUser[0]?.id || crypto.randomUUID();
+
+      if (existingUser.length) {
+        await tx
+          .update(schema.users)
+          .set({
+            name,
+            phone: phone || null,
+            officeName: officeName || null,
+            ptin: ptin || null,
+            efin: efin || null,
+            updatedAt: now,
+          })
+          .where(eq(schema.users.id, userId));
+      } else {
+        await tx.insert(schema.users).values({
+          id: userId,
+          name,
+          email,
+          emailVerified: false,
+          phone: phone || null,
+          officeName: officeName || null,
+          ptin: ptin || null,
+          efin: efin || null,
+          role: "preparer",
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+
+      const existingProfile = await tx
+        .select()
+        .from(schema.preparerProfiles)
+        .where(eq(schema.preparerProfiles.userId, userId))
+        .limit(1);
+
+      const profileValues: Partial<typeof schema.preparerProfiles.$inferInsert> = {
+        ptin: ptin || null,
+        efin: efin || null,
+        efinStatus: allowed(EFIN_STATUSES, body.efinStatus) ? body.efinStatus : "not_started",
+        wispStatus: allowed(WISP_STATUSES, body.wispStatus) ? body.wispStatus : "pending",
+        licenseType: allowed(LICENSE_TYPES, body.licenseType) ? body.licenseType : "none",
+        bankPartner: allowed(BANK_PARTNERS, body.bankPartner) ? body.bankPartner : "none",
+        season: text(body.season) || "2026",
+        updatedAt: now,
+      };
+
+      const [profile] = existingProfile.length
+        ? await tx
+            .update(schema.preparerProfiles)
+            .set(profileValues)
+            .where(eq(schema.preparerProfiles.userId, userId))
+            .returning()
+        : await tx
+            .insert(schema.preparerProfiles)
+            .values({
+              id: crypto.randomUUID(),
+              userId,
+              ...profileValues,
+              createdAt: now,
+              updatedAt: now,
+            })
+            .returning();
+
+      const note = text(body.note);
+      if (note) {
+        await tx.insert(schema.adminNotes).values({
+          id: crypto.randomUUID(),
+          entityType: "preparer",
+          entityId: userId,
+          authorName: adminName(context.data),
+          content: note,
+          createdAt: now,
+        });
+      }
+
+      return { userId, profile };
+    });
+
+    return json({
+      preparer: {
+        userId: result.userId,
+        profileId: result.profile?.id || null,
+        name,
+        email,
+        phone,
+        officeName,
+        ptin: result.profile?.ptin || ptin,
+        efin: result.profile?.efin || efin,
+        efinStatus: result.profile?.efinStatus || "not_started",
+        wispStatus: result.profile?.wispStatus || "pending",
+        licenseType: result.profile?.licenseType || "none",
+        bankPartner: result.profile?.bankPartner || "none",
+        season: result.profile?.season || "2026",
+      },
+    }, 201);
+  }
+
   if (method === "PATCH") {
     const body = await readBody(context.request);
     const userId = text(body.userId) || url.searchParams.get("userId") || "";

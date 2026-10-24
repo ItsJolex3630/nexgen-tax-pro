@@ -63,7 +63,7 @@ button{cursor:pointer}
 .logout{border:1px solid var(--line);background:transparent;color:var(--mut);border-radius:9px;width:36px;height:36px;display:grid;place-items:center;flex:none}
 .logout:hover{color:#fff;border-color:var(--gold)}
 .topbar{position:sticky;top:0;z-index:40;height:var(--top);display:flex;align-items:center;gap:16px;padding:0 28px;background:rgba(10,9,7,.78);backdrop-filter:blur(18px);border-bottom:1px solid var(--line-soft)}
-.menu-btn{display:none;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:10px;width:42px;height:42px;place-items:center}
+.menu-btn{display:none;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:10px;width:44px;height:44px;min-width:44px;min-height:44px;place-items:center}
 .search{position:relative;flex:1;max-width:520px}
 .search .icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--mut2)}
 .search input{width:100%;height:42px;border-radius:12px;border:1px solid var(--line-soft);background:rgba(255,255,255,.025);color:var(--text);padding:0 86px 0 42px;font-size:.85rem}
@@ -155,7 +155,7 @@ button{cursor:pointer}
 .donut-legend span{display:flex;align-items:center;gap:7px}
 .donut-legend i{width:8px;height:8px;border-radius:50%;flex:none}
 .donut-legend b{margin-left:auto;color:var(--text);font-weight:600}
-.table-wrap{overflow:auto}
+.table-wrap{overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;box-shadow:inset 18px 0 18px -24px rgba(201,162,75,.45),inset -18px 0 18px -24px rgba(201,162,75,.45)}
 table{width:100%;border-collapse:collapse;font-size:.76rem}
 th{text-align:left;padding:10px 14px;color:var(--mut2);font:700 .58rem var(--sans);letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--line-soft);white-space:nowrap}
 td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
@@ -196,6 +196,11 @@ tbody tr:hover{background:rgba(201,162,75,.035)}
 .mini-card span{display:block;color:var(--mut2);font:700 .57rem var(--sans);letter-spacing:.1em;text-transform:uppercase}
 .mini-card b{display:block;margin-top:6px;font:400 1.3rem/1 var(--serif);color:var(--gold-hi)}
 .mini-card small{display:block;margin-top:5px;color:var(--mut2);font-size:.62rem}
+.mini-card.green b{color:#6ee7b7}
+.mini-card.red b{color:#fca5a5}
+.mini-card.gold b{color:var(--gold-hi)}
+.amount-income{color:#6ee7b7;font-weight:700}
+.amount-expense{color:#fca5a5;font-weight:700}
 .compliance-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
 .compliance-card-item{border:1px solid var(--line-soft);border-radius:15px;padding:17px;background:linear-gradient(145deg,rgba(201,162,75,.05),transparent 60%),var(--surface)}
 .compliance-card-item h3{margin:0;color:var(--mut);font:700 .62rem var(--sans);letter-spacing:.1em;text-transform:uppercase}
@@ -250,6 +255,11 @@ textarea.input{min-height:82px;resize:vertical}
 @media(max-width:1180px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.dash-grid{grid-template-columns:1fr}.chart-card,.alerts-card,.recent-card,.goals-card,.compliance-card,.activity-card{grid-column:1}.kanban{grid-template-columns:repeat(3,minmax(190px,1fr))}}
 @media(max-width:900px){.sidebar{transform:translateX(-102%)}.sidebar.open{transform:none}.shell{margin-left:0}.menu-btn{display:grid}.topbar{padding:0 16px;gap:10px}.top-link{display:none}.main{padding:20px 16px 60px}.search input{padding-right:16px}.search kbd{display:none}.settings-grid,.compliance-grid{grid-template-columns:1fr}.mini-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.topbar{flex-wrap:wrap;height:auto;min-height:var(--top);padding:10px 12px}.search{order:3;flex-basis:100%;max-width:none}.top-actions{gap:6px}.top-actions .season-select{display:none}.kpi-grid{grid-template-columns:1fr}.view-head{align-items:flex-start}.view-actions{width:100%}.view-actions .btn{flex:1}.kanban{grid-template-columns:1fr}.field-row{grid-template-columns:1fr}.drawer{width:100%}.top-avatar{display:grid}.modal-wrap{padding:10px}}
+@media(max-width:640px){
+.modal-wrap{align-items:flex-end;padding:0}
+.modal{width:100%;max-height:90vh;border-bottom-left-radius:0;border-bottom-right-radius:0;overflow-y:auto}
+.modal-f{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--line-soft);z-index:2}
+}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style>
 </head>
@@ -259,6 +269,7 @@ textarea.input{min-height:82px;resize:vertical}
 <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M2.8 19.5c.4-3.3 3-5.2 6.2-5.2s5.8 1.9 6.2 5.2"/><circle cx="17.2" cy="9" r="2.5"/><path d="M17.5 14.2c2.4.1 3.9 1.6 4.2 4"/></symbol>
 <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3 7.8-7.5 9.5-4.5-1.7-7.5-4.9-7.5-9.5V6z"/><path d="M8.7 12.2l2.4 2.4 4.3-4.6"/></symbol>
 <symbol id="i-card" viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6 15h4"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M3 7h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/><path d="M3 7l12-3v3"/><circle cx="17" cy="13" r="1"/></symbol>
 <symbol id="i-cog" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4v-.2a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"/></symbol>
 <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
 <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></symbol>
@@ -280,6 +291,7 @@ textarea.input{min-height:82px;resize:vertical}
 <button type="button" data-tab="leads"><svg class="icon"><use href="#i-users"/></svg><span>Pipeline CRM</span><span class="count" id="navLeadCount">0</span></button>
 <button type="button" data-tab="preparers"><svg class="icon"><use href="#i-shield"/></svg><span>Preparadores</span></button>
 <button type="button" data-tab="invoices"><svg class="icon"><use href="#i-card"/></svg><span>Facturación</span></button>
+<button type="button" data-tab="finances"><svg class="icon"><use href="#i-wallet"/></svg><span>Finanzas</span></button>
 <button type="button" data-tab="compliance"><svg class="icon"><use href="#i-check"/></svg><span>Compliance EFIN</span></button>
 <button type="button" data-tab="settings"><svg class="icon"><use href="#i-cog"/></svg><span>Ajustes</span></button>
 </nav>
@@ -296,7 +308,7 @@ textarea.input{min-height:82px;resize:vertical}
 <section class="view" id="view-dashboard">
 <div class="view-head"><div><p class="eyebrow">Executive overview</p><h1>Buenas tardes, <span id="adminFirstName">Kellys</span></h1><p>Pipeline comercial, compliance fiscal y proyección de la temporada 2026 en una sola vista.</p></div><div class="view-actions"><button type="button" class="btn ghost" id="refreshBtn"><svg class="icon" style="width:15px;height:15px"><use href="#i-refresh"/></svg>Actualizar</button><button type="button" class="btn gold" data-modal="modalLead">+ Nuevo Lead</button></div></div>
 <div class="kpi-grid">
-<article class="kpi"><div class="kpi-top"><span>Ingresos de temporada</span><svg class="icon"><use href="#i-card"/></svg></div><div class="kpi-value" id="kpiRevenue">$0</div><div class="kpi-meta"><span>Facturado en vivo</span><b id="kpiRevenuePct">0% meta</b></div><div class="spark" id="sparkRevenue"></div></article>
+<article class="kpi"><div class="kpi-top"><span>Ingresos de temporada</span><svg class="icon"><use href="#i-card"/></svg></div><div class="kpi-value" id="kpiRevenue">$0</div><div class="kpi-meta"><span>Ingresos + finanzas</span><b id="kpiRevenuePct">Neto $0</b></div><div class="spark" id="sparkRevenue"></div></article>
 <article class="kpi blue"><div class="kpi-top"><span>Licencias TaxWise</span><svg class="icon"><use href="#i-shield"/></svg></div><div class="kpi-value" id="kpiLicenses">0</div><div class="kpi-meta"><span>Oficinas operando</span><b id="kpiLicensesMeta">0 perfiles</b></div><div class="spark" id="sparkLicenses"></div></article>
 <article class="kpi green"><div class="kpi-top"><span>Leads en seguimiento</span><svg class="icon"><use href="#i-users"/></svg></div><div class="kpi-value" id="kpiLeads">0</div><div class="kpi-meta"><span>Pipeline abierto</span><b id="kpiConversion">0% cierre</b></div><div class="spark" id="sparkLeads"></div></article>
 <article class="kpi"><div class="kpi-top"><span>E-File Ready</span><svg class="icon"><use href="#i-check"/></svg></div><div class="kpi-value" id="kpiCompliance">0%</div><div class="kpi-meta"><span>EFIN + WISP al día</span><b id="kpiComplianceMeta">0 oficinas</b></div><div class="spark" id="sparkCompliance"></div></article>
@@ -317,7 +329,7 @@ textarea.input{min-height:82px;resize:vertical}
 <div class="kanban" id="leadsKanban" hidden></div>
 </section>
 <section class="view" id="view-preparers" hidden>
-<div class="view-head"><div><p class="eyebrow">CRM fiscal</p><h1>Preparadores &amp; Oficinas</h1><p>Ficha técnica, licencias TaxWise y semáforo de compliance del IRS.</p></div><div class="view-actions"><button type="button" class="btn ghost" data-tab="compliance">Ver compliance</button></div></div>
+<div class="view-head"><div><p class="eyebrow">CRM fiscal</p><h1>Preparadores &amp; Oficinas</h1><p>Ficha técnica, licencias TaxWise y semáforo de compliance del IRS.</p></div><div class="view-actions"><button type="button" class="btn ghost" data-tab="compliance">Ver compliance</button><button type="button" class="btn gold" data-modal="modalPreparerNew">+ Nuevo Preparador</button></div></div>
 <div class="mini-grid" id="preparerStats"></div>
 <div class="filters"><select class="select" id="preparerEfinFilter" aria-label="Filtrar EFIN"><option value="all">Todo EFIN</option><option value="approved">EFIN aprobado</option><option value="pending_irs">EFIN en trámite</option><option value="action_required">Acción requerida</option><option value="not_started">Pendiente de envío</option></select><select class="select" id="preparerLicenseFilter" aria-label="Filtrar licencia"><option value="all">Toda licencia</option><option value="desktop_1040">Desktop 1040</option><option value="desktop_corp">Desktop Corp</option><option value="online">Online</option><option value="none">Sin licencia</option></select></div>
 <div class="card"><div class="table-wrap"><table><thead><tr><th>Preparador</th><th>Oficina</th><th>PTIN / EFIN</th><th>EFIN</th><th>WISP</th><th>Banco</th><th>Licencia</th><th></th></tr></thead><tbody id="preparersTable"></tbody></table></div></div>
@@ -327,6 +339,12 @@ textarea.input{min-height:82px;resize:vertical}
 <div class="mini-grid" id="invoiceStats"></div>
 <div class="filters"><select class="select" id="invoiceStatusFilter" aria-label="Filtrar facturas"><option value="all">Todas las facturas</option><option value="paid">Pagadas</option><option value="pending">Pendientes</option><option value="installment">Cuotas</option><option value="cancelled">Canceladas</option></select></div>
 <div class="card"><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Paquete</th><th>Monto</th><th>Estado</th><th>Vence</th><th>Notas</th><th></th></tr></thead><tbody id="invoicesTable"></tbody></table></div></div>
+</section>
+<section class="view" id="view-finances" hidden>
+<div class="view-head"><div><p class="eyebrow">Finanzas</p><h1>Finanzas &amp; Gastos</h1><p>Ingresos, egresos y utilidad neta de la operación.</p></div><div class="view-actions"><button type="button" class="btn ghost" data-open-finance="income">+ Registrar Ganancia</button><button type="button" class="btn gold" data-open-finance="expense">+ Registrar Gasto</button></div></div>
+<div class="mini-grid" id="financeStats"></div>
+<div class="filters"><select class="select" id="financeTypeFilter" aria-label="Filtrar tipo"><option value="all">Todos los movimientos</option><option value="income">Solo ingresos</option><option value="expense">Solo gastos</option></select><select class="select" id="financeCategoryFilter" aria-label="Filtrar categoría"><option value="all">Todas las categorías</option><optgroup label="Gastos"><option value="publicidad">Publicidad</option><option value="desarrollo_app">Desarrollo de Software / App</option><option value="diseno_grafico">Diseño Gráfico</option><option value="reparacion_sistemas">Reparación de Sistemas</option><option value="servidores_licencias">Servidores y Licencias</option><option value="oficina_operacion">Gastos de Oficina</option></optgroup><optgroup label="Ingresos"><option value="software_taxwise">Venta Licencia TaxWise</option><option value="capacitacion_cursos">Capacitación / Cursos</option><option value="startup_oficina">Tax Office Startup</option><option value="comisiones_bancarias">Comisiones Bancarias</option><option value="consultoria_wisp">Asesoría WISP / IRS</option></optgroup><option value="other">Otro</option></select></div>
+<div class="card"><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Categoría</th><th>Concepto</th><th>Método</th><th>Estado</th><th>Monto</th><th></th></tr></thead><tbody id="financesTable"></tbody></table></div></div>
 </section>
 <section class="view" id="view-compliance" hidden>
 <div class="view-head"><div><p class="eyebrow">IRS readiness</p><h1>Compliance EFIN / WISP</h1><p>Control del semáforo fiscal antes del arranque de temporada.</p></div><div class="view-actions"><button type="button" class="btn ghost" id="refreshCompliance">Actualizar</button></div></div>
@@ -359,6 +377,8 @@ textarea.input{min-height:82px;resize:vertical}
 <div class="modal-wrap" id="modalLead" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="leadModalTitle"><div class="modal-h"><div><h2 id="leadModalTitle">Nuevo prospecto</h2><p>Registra un lead para el pipeline comercial.</p></div><button type="button" class="close" data-close-modal aria-label="Cerrar"><svg class="icon"><use href="#i-close"/></svg></button></div><form id="leadForm"><div class="modal-b"><div class="field-row"><div class="field"><label for="lName">Nombre completo *</label><input class="input" id="lName" required autocomplete="name"></div><div class="field"><label for="lPhone">Teléfono *</label><input class="input" id="lPhone" required autocomplete="tel" placeholder="(407) 555-0000"></div></div><div class="field-row"><div class="field"><label for="lEmail">Correo *</label><input class="input" id="lEmail" type="email" required autocomplete="email"></div><div class="field"><label for="lOffice">Oficina</label><input class="input" id="lOffice" autocomplete="organization"></div></div><div class="field-row"><div class="field"><label for="lTopic">Interés</label><select class="input" id="lTopic"><option value="software">Software</option><option value="training">Training</option><option value="startup">Startup</option><option value="twonline">TaxWise Online</option></select></div><div class="field"><label for="lValue">Valor estimado (USD)</label><input class="input" id="lValue" type="number" min="0" step="50" value="0"></div></div><div class="field-row"><div class="field"><label for="lAssigned">Asignado a</label><select class="input" id="lAssigned"><option value="">Sin asignar</option><option value="Kellys">Kellys</option><option value="Malka">Malka</option></select></div><div class="field"><label for="lSource">Origen</label><select class="input" id="lSource"><option value="manual">Manual</option><option value="web_demo">Book a Demo</option><option value="questionnaire">Cuestionario</option><option value="whatsapp">WhatsApp</option></select></div></div><div class="field"><label for="lNotes">Notas iniciales</label><textarea class="input" id="lNotes" rows="3"></textarea></div></div><div class="modal-f"><button type="button" class="btn ghost" data-close-modal>Cancelar</button><button type="submit" class="btn gold">Crear lead</button></div></form></div></div>
 <div class="modal-wrap" id="modalPreparer" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="prepModalTitle"><div class="modal-h"><div><h2 id="prepModalTitle">Ficha del preparador</h2><p>Actualiza compliance, licencia y alianza bancaria.</p></div><button type="button" class="close" data-close-modal aria-label="Cerrar"><svg class="icon"><use href="#i-close"/></svg></button></div><form id="preparerForm"><div class="modal-b"><input type="hidden" id="pUserId"><div class="field-row"><div class="field"><label for="pPtin">PTIN</label><input class="input" id="pPtin"></div><div class="field"><label for="pEfin">EFIN</label><input class="input" id="pEfin"></div></div><div class="field-row"><div class="field"><label for="pEfinStatus">Estatus EFIN</label><select class="input" id="pEfinStatus"><option value="approved">Aprobado</option><option value="pending_irs">En trámite IRS</option><option value="action_required">Acción requerida</option><option value="not_started">Pendiente de envío</option></select></div><div class="field"><label for="pWispStatus">WISP</label><select class="input" id="pWispStatus"><option value="completed">Firmado &amp; almacenado</option><option value="pending">Pendiente de redacción</option><option value="exempt">Exento</option></select></div></div><div class="field-row"><div class="field"><label for="pLicense">Licencia TaxWise</label><select class="input" id="pLicense"><option value="desktop_1040">Desktop 1040</option><option value="desktop_corp">Desktop Corp</option><option value="online">Online</option><option value="none">Sin licencia</option></select></div><div class="field"><label for="pBank">Alianza bancaria</label><select class="input" id="pBank"><option value="tpg">TPG</option><option value="refund_advantage">Refund Advantage</option><option value="eps">EPS</option><option value="none">Sin banco</option></select></div></div><div class="field"><label for="pSeason">Temporada</label><select class="input" id="pSeason"><option value="2026">2026</option><option value="2025">2025</option></select></div><div class="field"><label for="pNote">Nota de seguimiento</label><textarea class="input" id="pNote" rows="3" placeholder="Avance con IRS, documentos recibidos…"></textarea></div></div><div class="modal-f"><button type="button" class="btn ghost" data-close-modal>Cancelar</button><button type="submit" class="btn gold">Guardar ficha</button></div></form></div></div>
 <div class="modal-wrap" id="modalInvoice" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="invoiceModalTitle"><div class="modal-h"><div><h2 id="invoiceModalTitle">Nueva factura</h2><p>Cotización personalizada o plan de pagos.</p></div><button type="button" class="close" data-close-modal aria-label="Cerrar"><svg class="icon"><use href="#i-close"/></svg></button></div><form id="invoiceForm"><div class="modal-b"><div class="field"><label for="iCustomer">Cliente *</label><input class="input" id="iCustomer" required></div><div class="field-row"><div class="field"><label for="iPackage">Paquete</label><select class="input" id="iPackage"><option value="Solo Software">Solo Software</option><option value="Pro + Training">Pro + Training</option><option value="Tax Office Startup">Tax Office Startup</option><option value="Custom">Custom</option></select></div><div class="field"><label for="iAmount">Monto (USD) *</label><input class="input" id="iAmount" type="number" min="1" step="1" required></div></div><div class="field-row"><div class="field"><label for="iStatus">Estado</label><select class="input" id="iStatus"><option value="pending">Pendiente</option><option value="paid">Pagada</option><option value="installment">Cuota</option><option value="cancelled">Cancelada</option></select></div><div class="field"><label for="iDue">Fecha de vencimiento</label><input class="input" id="iDue" type="date"></div></div><div class="field"><label for="iNotes">Notas</label><textarea class="input" id="iNotes" rows="3"></textarea></div></div><div class="modal-f"><button type="button" class="btn ghost" data-close-modal>Cancelar</button><button type="submit" class="btn gold">Crear factura</button></div></form></div></div>
+<div class="modal-wrap" id="modalFinance" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="finModalTitle"><div class="modal-h"><div><h2 id="finModalTitle">Registrar movimiento</h2><p id="finModalSub">Ingreso o gasto operativo</p></div><button type="button" class="close" data-close-modal aria-label="Cerrar"><svg class="icon"><use href="#i-close"/></svg></button></div><form id="financeForm"><div class="modal-b"><input type="hidden" id="finType" value="expense"><div class="field"><label for="finCategory">Categoría *</label><select class="input" id="finCategory" required></select></div><div class="field" id="finCategoryDetailGroup" hidden><label for="finCategoryDetail">Especifica el concepto *</label><input class="input" id="finCategoryDetail" placeholder="Ej. Reparación de servidor, campaña Meta, diseño de póster…"></div><div class="field"><label for="finDescription">Descripción *</label><input class="input" id="finDescription" required placeholder="Concepto del movimiento"></div><div class="field-row"><div class="field"><label for="finAmount">Monto (USD) *</label><input class="input" id="finAmount" type="number" min="1" step="1" required></div><div class="field"><label for="finDate">Fecha *</label><input class="input" id="finDate" type="date" required></div></div><div class="field-row"><div class="field"><label for="finStatus">Estado</label><select class="input" id="finStatus"><option value="paid">Pagado / cobrado</option><option value="pending">Pendiente</option></select></div><div class="field"><label for="finPaymentMethod">Método de pago</label><select class="input" id="finPaymentMethod"><option value="zelle">Zelle</option><option value="card">Tarjeta</option><option value="bank_transfer">Transferencia bancaria</option><option value="cash">Efectivo</option><option value="other">Otro</option></select></div></div><div class="field"><label for="finNotes">Notas</label><textarea class="input" id="finNotes" rows="3"></textarea></div></div><div class="modal-f"><button type="button" class="btn ghost" data-close-modal>Cancelar</button><button type="submit" class="btn gold" id="finSubmit">Guardar movimiento</button></div></form></div></div>
+<div class="modal-wrap" id="modalPreparerNew" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="prepNewTitle"><div class="modal-h"><div><h2 id="prepNewTitle">Nuevo preparador / oficina</h2><p>Alta manual en el CRM fiscal.</p></div><button type="button" class="close" data-close-modal aria-label="Cerrar"><svg class="icon"><use href="#i-close"/></svg></button></div><form id="preparerNewForm"><div class="modal-b"><div class="field-row"><div class="field"><label for="nName">Nombre completo *</label><input class="input" id="nName" required></div><div class="field"><label for="nEmail">Correo *</label><input class="input" id="nEmail" type="email" required></div></div><div class="field-row"><div class="field"><label for="nPhone">Teléfono</label><input class="input" id="nPhone" autocomplete="tel"></div><div class="field"><label for="nOffice">Oficina</label><input class="input" id="nOffice"></div></div><div class="field-row"><div class="field"><label for="nPtin">PTIN</label><input class="input" id="nPtin"></div><div class="field"><label for="nEfin">EFIN</label><input class="input" id="nEfin"></div></div><div class="field-row"><div class="field"><label for="nEfinStatus">Estatus EFIN</label><select class="input" id="nEfinStatus"><option value="not_started">Pendiente de envío</option><option value="pending_irs">En trámite IRS</option><option value="approved">Aprobado</option><option value="action_required">Acción requerida</option></select></div><div class="field"><label for="nWispStatus">WISP</label><select class="input" id="nWispStatus"><option value="pending">Pendiente de redacción</option><option value="completed">Firmado &amp; almacenado</option><option value="exempt">Exento</option></select></div></div><div class="field-row"><div class="field"><label for="nLicense">Licencia TaxWise</label><select class="input" id="nLicense"><option value="none">Sin licencia</option><option value="desktop_1040">Desktop 1040</option><option value="desktop_corp">Desktop Corp</option><option value="online">Online</option></select></div><div class="field"><label for="nBank">Banco aliado</label><select class="input" id="nBank"><option value="none">Sin banco</option><option value="tpg">TPG</option><option value="refund_advantage">Refund Advantage</option><option value="eps">EPS</option></select></div></div><div class="field"><label for="nSeason">Temporada</label><select class="input" id="nSeason"><option value="2026">2026</option><option value="2025">2025</option></select></div></div><div class="modal-f"><button type="button" class="btn ghost" data-close-modal>Cancelar</button><button type="submit" class="btn gold">Crear preparador</button></div></form></div></div>
 <div class="toast" id="toast" aria-live="polite"></div>
 <script>
 (function(){
@@ -380,7 +400,14 @@ const WISP_STATUS={completed:{label:'Firmado & almacenado',color:'green'},pendin
 const LICENSE_TYPES={desktop_1040:'Desktop 1040',desktop_corp:'Desktop Corp',online:'Online',none:'Sin licencia'};
 const BANK_PARTNERS={tpg:'TPG',refund_advantage:'Refund Advantage',eps:'EPS',none:'Sin banco'};
 const INVOICE_STATUS={paid:{label:'Pagada',color:'green'},pending:{label:'Pendiente',color:'amber'},installment:{label:'Cuota',color:'blue'},cancelled:{label:'Cancelada',color:'red'}};
-const state={session:null,tab:'dashboard',stats:null,leads:[],preparers:[],invoices:[],search:'',leadStatus:'all',leadTopic:'all',leadView:'table',efinFilter:'all',licenseFilter:'all',invoiceStatus:'all',activeLeadId:null,season:'2026',redirecting:false};
+const FINANCE_TYPE={income:{label:'Ingreso',color:'green'},expense:{label:'Gasto',color:'red'}};
+const FINANCE_STATUS={paid:{label:'Pagado / cobrado',color:'green'},pending:{label:'Pendiente',color:'amber'}};
+const FINANCE_METHODS={zelle:'Zelle',card:'Tarjeta',bank_transfer:'Transferencia',cash:'Efectivo',other:'Otro'};
+const FINANCE_CATEGORIES={
+  expense:[['publicidad','Publicidad (Meta, Google, Flyers)'],['desarrollo_app','Desarrollo de Software / App'],['diseno_grafico','Diseño Gráfico (Pósters, Branding)'],['reparacion_sistemas','Reparación / Mantenimiento de Sistemas'],['servidores_licencias','Servidores y Licencias'],['oficina_operacion','Gastos Operativos de Oficina'],['other','Otro (especificar)']],
+  income:[['software_taxwise','Venta Licencia TaxWise'],['capacitacion_cursos','Capacitación / Cursos'],['startup_oficina','Tax Office Startup'],['comisiones_bancarias','Comisiones Productos Bancarios'],['consultoria_wisp','Asesoría WISP / IRS'],['other','Otro (especificar)']]
+};
+const state={session:null,tab:'dashboard',stats:null,leads:[],preparers:[],invoices:[],finances:[],financeSummary:null,search:'',leadStatus:'all',leadTopic:'all',leadView:'table',efinFilter:'all',licenseFilter:'all',invoiceStatus:'all',financeType:'all',financeCategory:'all',activeLeadId:null,season:'2026',redirecting:false};
 
 const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtUSD=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(Number(n||0));
@@ -430,15 +457,17 @@ function renderIdentity(){
   if(s)s.innerHTML='<div class="profile-line"><span>Nombre</span><b>'+esc(name)+'</b></div><div class="profile-line"><span>Correo</span><b>'+esc(user.email||'—')+'</b></div><div class="profile-line"><span>Rol</span><b>'+esc(user.role||'—')+'</b></div><div class="profile-line"><span>ID de usuario</span><b style="font-size:.66rem">'+esc(user.id||'—')+'</b></div>';
 }
 async function refreshAll(){
-  const [statsData,leadsData,preparersData,invoicesData]=await Promise.all([api('/stats'),api('/leads'),api('/preparers'),api('/invoices')]);
+  const [statsData,leadsData,preparersData,invoicesData,financesData]=await Promise.all([api('/stats'),api('/leads'),api('/preparers'),api('/invoices'),api('/finances')]);
   state.stats=statsData.stats||statsData;
   state.leads=leadsData.leads||[];
   state.preparers=preparersData.preparers||[];
   state.invoices=invoicesData.invoices||[];
+  state.finances=financesData.records||[];
+  state.financeSummary=financesData.summary||null;
   renderAll();
 }
 function renderAll(){
-  renderDashboard();renderLeads();renderPreparers();renderInvoices();renderCompliance();renderIdentity();
+  renderDashboard();renderLeads();renderPreparers();renderInvoices();renderFinances();renderCompliance();renderIdentity();
   $('#navLeadCount').textContent=String(state.leads.filter(l=>['new','contacted','demo_scheduled','trial_sent'].includes(l.status)).length);
   const alerts=(state.stats&&state.stats.alerts)||[];const urgent=alerts.reduce((n,a)=>n+(Number(a.count)||0),0);
   $('#notifCount').textContent=String(urgent);$('#notifCount').style.display=urgent?'block':'none';
@@ -454,7 +483,7 @@ function sparkline(values,color){
 }
 function renderDashboard(){
   const s=state.stats;if(!s)return;const trend=s.trend||[];
-  $('#kpiRevenue').textContent=fmtUSD(s.revenue.total);$('#kpiRevenuePct').textContent=(s.revenue.progress||0)+'% meta';
+  $('#kpiRevenue').textContent=fmtUSD(s.revenue.total);$('#kpiRevenuePct').textContent='Neto '+fmtUSD(s.revenue.netProfit||0);
   $('#kpiLicenses').textContent=String(s.licenses.active||0);$('#kpiLicensesMeta').textContent=(s.licenses.total||0)+' perfiles';
   $('#kpiLeads').textContent=String(s.leads.open||0);$('#kpiConversion').textContent=(s.leads.conversion||0)+'% cierre';
   $('#kpiCompliance').textContent=(s.compliance.rate||0)+'%';$('#kpiComplianceMeta').textContent=(s.compliance.efinReady||0)+' oficinas';
@@ -563,6 +592,61 @@ function renderInvoices(){
   const body=$('#invoicesTable');
   body.innerHTML=rows.length?rows.map(i=>'<tr><td><b>'+esc(i.customerName)+'</b></td><td>'+esc(i.package)+'</td><td>'+fmtUSD(i.amount)+'</td><td>'+statusBadge(INVOICE_STATUS,i.status)+'</td><td>'+fmtDate(i.dueDate)+'</td><td><span class="cell-sub">'+esc(i.notes||'—')+'</span></td><td><div class="actions">'+(i.status!=='paid'&&i.status!=='cancelled'?'<button type="button" class="btn sm ghost" data-pay-invoice="'+esc(i.id)+'">Marcar pagada</button>':'')+'</div></td></tr>').join(''):'<tr><td colspan="7" class="empty"><b>Sin facturas</b>Crea la primera cotización o plan de pago.</td></tr>';
 }
+function financeTotals(){
+  if(state.financeSummary)return state.financeSummary;
+  const income=state.finances.filter(r=>r.type==='income');const expense=state.finances.filter(r=>r.type==='expense');
+  const totalIncome=income.reduce((n,r)=>n+Number(r.amount||0),0);const totalExpense=expense.reduce((n,r)=>n+Number(r.amount||0),0);
+  const netProfit=totalIncome-totalExpense;
+  return {totalIncome,totalExpense,netProfit,profitMargin:totalIncome?Math.round((netProfit/totalIncome)*1000)/10:0,pendingIncome:income.filter(r=>r.status==='pending').reduce((n,r)=>n+Number(r.amount||0),0),pendingExpense:expense.filter(r=>r.status==='pending').reduce((n,r)=>n+Number(r.amount||0),0),incomeCount:income.length,expenseCount:expense.length};
+}
+function financeCategoryLabel(r){
+  if(r.category==='other')return 'Otro: '+(r.categoryDetail||'—');
+  const list=FINANCE_CATEGORIES[r.type]||[];const found=list.find(x=>x[0]===r.category);return found?found[1]:r.category;
+}
+function filteredFinances(){
+  const q=state.search;
+  return state.finances.filter(r=>(state.financeType==='all'||r.type===state.financeType)).filter(r=>(state.financeCategory==='all'||r.category===state.financeCategory)).filter(r=>!q||[r.description,r.categoryDetail,r.notes,r.paymentMethod].filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
+}
+function renderFinances(){
+  const sum=financeTotals();const rows=filteredFinances();
+  const stats=$('#financeStats');
+  if(stats)stats.innerHTML='<div class="mini-card green"><span>Ingresos totales</span><b>'+fmtUSD(sum.totalIncome)+'</b><small>'+sum.incomeCount+' transacciones</small></div><div class="mini-card red"><span>Gastos totales</span><b>'+fmtUSD(sum.totalExpense)+'</b><small>'+sum.expenseCount+' egresos registrados</small></div><div class="mini-card gold"><span>Utilidad neta</span><b>'+fmtUSD(sum.netProfit)+' Net</b><small>'+Number(sum.profitMargin||0).toFixed(1)+'% margen operativo</small></div><div class="mini-card"><span>Por cobrar / por pagar</span><b>'+fmtUSD(sum.pendingIncome)+' / '+fmtUSD(sum.pendingExpense)+'</b><small>Saldos pendientes de liquidar</small></div>';
+  const body=$('#financesTable');if(!body)return;
+  body.innerHTML=rows.length?rows.map(r=>'<tr><td>'+fmtDate(r.date)+'</td><td>'+statusBadge(FINANCE_TYPE,r.type)+'</td><td>'+esc(financeCategoryLabel(r))+'</td><td><b>'+esc(r.description)+'</b>'+(r.notes?'<br><span class="cell-sub">'+esc(r.notes)+'</span>':'')+'</td><td>'+esc(FINANCE_METHODS[r.paymentMethod]||r.paymentMethod||'—')+'</td><td>'+statusBadge(FINANCE_STATUS,r.status)+'</td><td class="'+(r.type==='income'?'amount-income':'amount-expense')+'">'+(r.type==='income'?'+':'−')+fmtUSD(r.amount)+'</td><td><div class="actions"><button type="button" class="icon-action" data-delete-finance="'+esc(r.id)+'" aria-label="Eliminar movimiento"><svg class="icon" style="width:15px;height:15px"><use href="#i-close"/></svg></button></div></td></tr>').join(''):'<tr><td colspan="8" class="empty"><b>Sin movimientos</b>Registra la primera ganancia o gasto.</td></tr>';
+}
+function syncFinanceCategory(){
+  const other=$('#finCategory').value==='other';const group=$('#finCategoryDetailGroup');const input=$('#finCategoryDetail');
+  if(group)group.hidden=!other;if(input){input.required=other;if(!other)input.value=''}
+}
+function openFinance(type){
+  type=type==='income'?'income':'expense';
+  $('#finType').value=type;
+  $('#finModalTitle').textContent=type==='income'?'Registrar ganancia':'Registrar gasto';
+  $('#finModalSub').textContent=type==='income'?'Ingreso o ganancia atípica':'Gasto o egreso operativo';
+  $('#finCategory').innerHTML=(FINANCE_CATEGORIES[type]||[]).map(([v,l])=>'<option value="'+v+'">'+esc(l)+'</option>').join('');
+  $('#finCategoryDetailGroup').hidden=true;$('#finCategoryDetail').required=false;$('#finCategoryDetail').value='';
+  $('#finDescription').value='';$('#finAmount').value='';$('#finDate').value=new Date().toISOString().slice(0,10);$('#finStatus').value='paid';$('#finPaymentMethod').value='zelle';$('#finNotes').value='';
+  openModal('modalFinance');
+}
+async function saveFinance(e){
+  e.preventDefault();const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;
+  try{
+    await api('/finances',{method:'POST',body:{type:$('#finType').value,category:$('#finCategory').value,categoryDetail:$('#finCategoryDetail').value,description:$('#finDescription').value,amount:$('#finAmount').value,date:$('#finDate').value,status:$('#finStatus').value,paymentMethod:$('#finPaymentMethod').value,notes:$('#finNotes').value,season:state.season}});
+    e.target.reset();closeAllModals();toast('Movimiento registrado.');await refreshAll();showView('finances');
+  }catch(err){toast(err.message,'error')}finally{btn.disabled=false}
+}
+async function deleteFinance(id){
+  if(!confirm('¿Eliminar este movimiento financiero?'))return;
+  try{await api('/finances',{method:'DELETE',body:{id}});toast('Movimiento eliminado.');await refreshAll()}catch(err){toast(err.message,'error')}
+}
+async function saveNewPreparer(e){
+  e.preventDefault();const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;
+  try{
+    await api('/preparers',{method:'POST',body:{name:$('#nName').value,email:$('#nEmail').value,phone:$('#nPhone').value,officeName:$('#nOffice').value,ptin:$('#nPtin').value,efin:$('#nEfin').value,efinStatus:$('#nEfinStatus').value,wispStatus:$('#nWispStatus').value,licenseType:$('#nLicense').value,bankPartner:$('#nBank').value,season:$('#nSeason').value}});
+    e.target.reset();closeAllModals();toast('Preparador creado.');await refreshAll();showView('preparers');
+  }catch(err){toast(err.message,'error')}finally{btn.disabled=false}
+}
+
 function renderCompliance(){
   const s=state.preparers;const total=s.length||1;
   const efin=s.filter(p=>p.efinStatus==='approved').length;const wisp=s.filter(p=>p.wispStatus==='completed').length;const bank=s.filter(p=>p.bankPartner&&p.bankPartner!=='none').length;
@@ -577,7 +661,7 @@ function showView(tab){
   $$('.view').forEach(v=>{v.hidden=v.id!=='view-'+tab});
   $$('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   $('#sidebar').classList.remove('open');$('#scrim').hidden=true;
-  if(tab==='dashboard')renderDashboard();if(tab==='leads')renderLeads();if(tab==='preparers')renderPreparers();if(tab==='invoices')renderInvoices();if(tab==='compliance')renderCompliance();if(tab==='settings')renderIdentity();
+  if(tab==='dashboard')renderDashboard();if(tab==='leads')renderLeads();if(tab==='preparers')renderPreparers();if(tab==='invoices')renderInvoices();if(tab==='finances')renderFinances();if(tab==='compliance')renderCompliance();if(tab==='settings')renderIdentity();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function openLead(id){
@@ -650,11 +734,16 @@ function bindEvents(){
     const statusBtn=e.target.closest('[data-lead-status]');if(statusBtn){state.leadStatus=statusBtn.dataset.leadStatus;renderLeads();return}
     const viewBtn=e.target.closest('[data-lead-view]');if(viewBtn){state.leadView=viewBtn.dataset.leadView;renderLeads();return}
     const payBtn=e.target.closest('[data-pay-invoice]');if(payBtn){markPaid(payBtn.dataset.payInvoice);return}
+    const openFin=e.target.closest('[data-open-finance]');if(openFin){openFinance(openFin.dataset.openFinance);return}
+    const delFin=e.target.closest('[data-delete-finance]');if(delFin){deleteFinance(delFin.dataset.deleteFinance);return}
     if(e.target.id==='scrim'){$('#sidebar').classList.remove('open');$('#scrim').hidden=true}
   });
   $('#leadForm').addEventListener('submit',saveLead);
   $('#preparerForm').addEventListener('submit',savePreparer);
   $('#invoiceForm').addEventListener('submit',saveInvoice);
+  $('#financeForm').addEventListener('submit',saveFinance);
+  $('#preparerNewForm').addEventListener('submit',saveNewPreparer);
+  $('#finCategory').addEventListener('change',syncFinanceCategory);
   $('#saveLeadBtn').addEventListener('click',saveLeadFollow);
   $('#drawerScrim').addEventListener('click',closeDrawer);
   $('#menuBtn').addEventListener('click',()=>{$('#sidebar').classList.add('open');$('#scrim').hidden=false});
@@ -668,7 +757,9 @@ function bindEvents(){
   $('#preparerEfinFilter').addEventListener('change',e=>{state.efinFilter=e.target.value;renderPreparers()});
   $('#preparerLicenseFilter').addEventListener('change',e=>{state.licenseFilter=e.target.value;renderPreparers()});
   $('#invoiceStatusFilter').addEventListener('change',e=>{state.invoiceStatus=e.target.value;renderInvoices()});
-  const onSearch=debounce(e=>{state.search=e.target.value.trim().toLowerCase();if(state.tab==='leads')renderLeads();if(state.tab==='preparers')renderPreparers();if(state.tab==='invoices')renderInvoices();if(state.tab==='compliance')renderCompliance()},160);
+  $('#financeTypeFilter').addEventListener('change',e=>{state.financeType=e.target.value;renderFinances()});
+  $('#financeCategoryFilter').addEventListener('change',e=>{state.financeCategory=e.target.value;renderFinances()});
+  const onSearch=debounce(e=>{state.search=e.target.value.trim().toLowerCase();if(state.tab==='leads')renderLeads();if(state.tab==='preparers')renderPreparers();if(state.tab==='invoices')renderInvoices();if(state.tab==='finances')renderFinances();if(state.tab==='compliance')renderCompliance()},160);
   $('#globalSearch').addEventListener('input',onSearch);
   document.addEventListener('keydown',e=>{
     if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#globalSearch').focus()}
