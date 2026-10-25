@@ -6,6 +6,17 @@ import { eq } from "drizzle-orm";
 import { createDb, schema, type Env } from "./db";
 import { validateDeliverableEmail, sendVerificationOtpEmail } from "./email";
 
+export const ADMIN_EMAILS = [
+  "malka@nexgentaxpro.net",
+  "kellys@nexgentaxpro.net",
+  "jolex3630@gmail.com",
+  "somosvendo.ve@gmail.com",
+];
+
+export function isAdminEmail(email?: string | null): boolean {
+  return ADMIN_EMAILS.includes(String(email || "").trim().toLowerCase());
+}
+
 export function createAuth(
   env: Env,
   request?: Request,
@@ -30,6 +41,8 @@ export function createAuth(
     trustedOrigins: [
       "https://nexgen-tax-pro.pages.dev",
       "https://*.nexgen-tax-pro.pages.dev",
+      "https://nexgentaxpro.net",
+      "https://www.nexgentaxpro.net",
       "http://localhost:8788",
       "http://127.0.0.1:8788",
     ],
@@ -63,6 +76,20 @@ export function createAuth(
         officeName: { type: "string", required: false },
         ptin: { type: "string", required: false },
         efin: { type: "string", required: false },
+      },
+    },
+
+    databaseHooks: {
+      user: {
+        create: {
+          before: async (user) => {
+            const email = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
+            if (isAdminEmail(email)) {
+              return { data: { ...user, role: "admin" } };
+            }
+            return { data: user };
+          },
+        },
       },
     },
 

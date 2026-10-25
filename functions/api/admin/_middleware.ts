@@ -1,5 +1,6 @@
-import { createAuth } from "../../auth";
-import type { Env } from "../../db";
+import { eq } from "drizzle-orm";
+import { createAuth, isAdminEmail } from "../../auth";
+import { createDb, schema, type Env } from "../../db";
 
 interface Ctx {
   request: Request;
@@ -21,13 +22,30 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
     });
   }
 
-  if ((session.user as { role?: string }).role !== "admin") {
+  const user = session.user as { id: string; email?: string; role?: string };
+  const email = String(user.email || "").trim().toLowerCase();
+  const whitelisted = isAdminEmail(email);
+
+  if (user.role !== "admin" && !whitelisted) {
     return new Response(JSON.stringify({ error: "Acceso denegado. Se requiere rol de administrador." }), {
       status: 403,
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  context.data.adminUser = session.user;
+  if (whitelisted && user.role !== "admin") {
+    try {
+      const db = createDb(context.env);
+      await db
+        .update(schema.users)
+        .set({ role: "admin", updatedAt: new Date() })
+        .where(eq(schema.users.id, user.id));
+      user.role = "admin";
+    } catch (error) {
+      console.error("[admin/_middleware] role sync failed", error);
+    }
+  }
+
+  context.data.adminUser = user;
   return context.next();
 };

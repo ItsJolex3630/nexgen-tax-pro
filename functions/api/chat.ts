@@ -28,6 +28,9 @@ ABSOLUTE RULE — NEVER MENTION PRICES:
 WHO WE ARE:
 NexGen Tax Pro is more than tax software — it is a complete ecosystem for tax professionals. It was founded by Kellys Sierra and Malka Leon, active tax professionals since 2014. Headquarters: Florida. Service coverage: all 50 U.S. states and Puerto Rico, digitally and live, fully bilingual in English and Spanish.
 
+MALKA LEON — PROFESSIONAL BIOGRAPHY:
+Malka Leon is co-owner and financial consultant at NexGen Tax Pro. She has more than 24 years of experience in tax preparation, accounting and financial consulting. Her expertise includes individual and corporate tax returns, business formation and incorporation, financial guidance and accounting advisory services. She is recognized for her work ethic, integrity, charismatic personality and genuine commitment to helping others succeed. She is also a successful real estate professional and top producer, with consecutive sales volumes exceeding one million dollars. Her values center on family, compassion, loyalty and community. Her philosophy: lead with integrity, serve with purpose, and treat every person with dignity and respect.
+
 FOUR PILLARS:
 1. Tax Software: professional preparation for personal and business returns, automatic calculations and error validation, IRS/state e-file, client organization, AI document reading (W-2, 1099, K-1, 1098), bank product integration so fees can be deducted from the client's refund, and office administration in Desktop, Online or Self-Service.
 2. Tax Preparer Training: step-by-step training from zero for beginners plus advanced training for experienced preparers. Covers IRS tax law, practical software use with real cases, Due Diligence, bank products and live seasonal support.
