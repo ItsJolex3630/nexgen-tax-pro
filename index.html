@@ -1515,7 +1515,7 @@ dialog{border:0;padding:0;background:transparent;max-width:none;max-height:none}
   <span class="as-welcome-title">👋 Asesor NexGen</span>
   <button type="button" class="as-welcome-close" id="asWelcomeClose" aria-label="Cerrar">×</button>
  </div>
- <p id="asWelcomeTxt">¡Hola! Estoy aquí para resolver tus dudas sobre precios 2026, software o la apertura de tu oficina.</p>
+ <p id="asWelcomeTxt">¡Hola! Estoy aquí para resolver tus dudas sobre nuestro software, capacitación, los paquetes 2026 o la apertura de tu oficina.</p>
  <span class="as-welcome-act" id="asWelcomeAct">Pregúntame aquí →</span>
 </div>
 <section class="asst" id="asst" role="region" aria-label="NexGen Assistant" aria-live="off">
@@ -1568,7 +1568,7 @@ const CONFIG={
   formalooUrl:'https://nexgentaxpro.formaloo.me/95tbh3',  // official NexGen online form
   demoDataUrl:'https://twonline-25.taxwise.com/',          // TaxWise portal for office data entry
   formEndpoint:'',                                         // e.g. https://api.example.com/forms  (server-side validation, storage, e-sign audit log)
-  assistantEndpoint:'',                                    // server-side AI proxy. Empty = guided FAQ mode
+  assistantEndpoint:'/api/chat',                            // Cloudflare Workers AI proxy
   leadEmail:'info@nexgentaxpro.com',                       // Book a Demo messages go here
   wa:{sw:'14072419326',team:'13215580061'},                 // WhatsApp numbers used by Book a Demo (digits only, with country code)
   leadEndpoint:'',                                         // optional: background POST of each lead to your own server / form service
@@ -2050,9 +2050,66 @@ const KB=[
       'El <b>WISP</b> (Written Information Security Plan) es un manual escrito de seguridad de datos que el IRS y la FTC exigen obligatoriamente a toda oficina de impuestos. En lugar de que te rompas la cabeza redactándolo desde cero, en NexGen te entregamos la estructura guiada y dejamos tu oficina 100% en regla.'),
   acts:[{t:'link',href:'#/training-support',l:L('See compliance','Ver cumplimiento')},{t:'tel',k:'team'}]},
 
+ /* --- CORE ECOSYSTEM INTENTS (básicos y avanzados, sin precios) --- */
+ {id:'what_software_does',
+  kw:['para que sirve el software','para que funciona el software','que hace el software','como funciona el software','explicame el software','para que es el software','software sirve','que puedo hacer con el software','what does the software do','what is the software for','how does the software work'],
+  q:L('What exactly does the software do?','¿Para qué sirve exactamente el software?'),
+  a:L('<b>The software is the operational engine of your tax office.</b><ul class="as-list"><li>Prepares personal and business returns end to end: <b>1040, 1065, 1120, 1120-S, 990, 706 and 709</b>.</li><li>Calculates automatically and validates errors before filing.</li><li>Transmits <b>e-file</b> to the IRS and state agencies across all 50 states.</li><li>Organizes client files, notes and return workflows.</li><li>Uses AI/OCR to read <b>W-2, 1099, K-1 and 1098</b> in seconds instead of typing every box.</li><li>Connects bank products (<b>TPG, Refund Advantage, EPS</b>) so preparation fees can be deducted from the client refund when applicable.</li></ul>You can work in <b>Desktop, Online or Self-Service</b>, with guided onboarding and support included.',
+      '<b>El software es el motor operativo de tu oficina de impuestos.</b><ul class="as-list"><li>Prepara declaraciones personales y de negocio de principio a fin: <b>1040, 1065, 1120, 1120-S, 990, 706 y 709</b>.</li><li>Calcula automáticamente y valida errores antes de presentar.</li><li>Transmite <b>e-file</b> al IRS y a las agencias estatales en los 50 estados.</li><li>Organiza expedientes, notas y el flujo de cada declaración.</li><li>Usa IA/OCR para leer <b>W-2, 1099, K-1 y 1098</b> en segundos, sin digitar casilla por casilla.</li><li>Conecta productos bancarios (<b>TPG, Refund Advantage, EPS</b>) para que los honorarios se descuenten del reembolso cuando aplique.</li></ul>Puedes trabajar en <b>Desktop, Online o Self-Service</b>, con onboarding guiado y soporte incluido.'),
+  acts:[{t:'link',href:'#/software',l:L('Explore the software','Explorar el software')},{t:'link',href:'#/book-demo',l:L('See it live','Verlo en vivo')}]},
+
+ {id:'how_helps',
+  kw:['en que me puede ayudar','en que me ayudan','en que me ayuda','como me ayudan','como me ayuda','como me pueden ayudar','como me puede ayudar','en que me beneficia','por que trabajar con ustedes','para que me sirve nexgen','que puedo lograr con nexgen','what can you help me with','how do you help me','how can you help me','what can nexgen do for me','why work with nexgen'],
+  q:L('How can NexGen help me?','¿En qué me puede ayudar NexGen?'),
+  a:L('<b>We help you in four practical pillars:</b><ul class="as-list"><li>💻 <b>Software:</b> prepare, validate and e-file personal and business returns, with AI document import and bank products.</li><li>🎓 <b>Training:</b> learn from zero or update your skills with live practical classes, IRS tax law and Due Diligence.</li><li>🚀 <b>Office startup:</b> guidance with PTIN, EFIN and WISP, team setup, processes and bank partners to open or structure your office.</li><li>📈 <b>Growth:</b> marketing templates, client retention strategies and operational structure to increase volume and professionalize your business.</li></ul>We support you year-round, in English and Spanish.',
+      '<b>Te ayudamos en cuatro pilares prácticos:</b><ul class="as-list"><li>💻 <b>Software:</b> prepara, valida y transmite declaraciones personales y de negocio, con importación de documentos por IA y productos bancarios.</li><li>🎓 <b>Capacitación:</b> aprende desde cero o actualízate con clases prácticas en vivo, leyes del IRS y Due Diligence.</li><li>🚀 <b>Apertura de oficina:</b> orientación con PTIN, EFIN y WISP, configuración de equipo, procesos y bancos aliados para abrir o estructurar tu oficina.</li><li>📈 <b>Crecimiento:</b> plantillas de marketing, estrategias de retención y estructura operativa para aumentar tu volumen y profesionalizar el negocio.</li></ul>Te acompañamos todo el año, en inglés y español.'),
+  acts:[{t:'link',href:'#/book-demo',l:L('Book a demo','Reservar demo')},{t:'link',href:'#/software',l:L('See the ecosystem','Ver el ecosistema')}]},
+
+ {id:'ecosystem',
+  kw:['que ofrecen','que servicios tienen','que es nexgen','a que se dedican','lineas de negocio','que mas ofrecen','cual es el ecosistema','what do you offer','what services do you have','what is nexgen','what does nexgen do'],
+  q:L('What does NexGen offer?','¿Qué ofrece NexGen Tax Pro?'),
+  a:L('<b>More than tax software — a complete ecosystem for tax professionals.</b> Our six lines of business are:<ul class="as-list"><li><b>Tax Preparation Software</b> for professionals and tax offices.</li><li><b>Tax Preparation Training</b> for new and experienced preparers.</li><li><b>Tax Office Startup & Launch Services</b> to establish and organize an office from scratch.</li><li><b>Business & Tax Office Support:</b> processes, technology, WISP/IRS compliance and operations.</li><li><b>Marketing & Business Growth Support</b> to attract and retain clients.</li><li><b>Professional Tax Support & Education</b> throughout the year, not only during filing season.</li></ul>Founded by Kellys Sierra and Malka Leon, active tax professionals since 2014.',
+      '<b>Más que un software de impuestos: un ecosistema completo para profesionales tributarios.</b> Nuestras seis líneas de negocio son:<ul class="as-list"><li><b>Software de preparación de impuestos</b> para profesionales y oficinas.</li><li><b>Capacitación para preparadores</b> nuevos y experimentados.</li><li><b>Apertura y lanzamiento de oficinas de impuestos</b> desde cero.</li><li><b>Soporte operativo y de cumplimiento:</b> procesos, tecnología, WISP/IRS y operaciones.</li><li><b>Marketing y crecimiento del negocio</b> para atraer y retener clientes.</li><li><b>Soporte profesional y educación</b> durante todo el año, no solo en temporada.</li></ul>Fundado por Kellys Sierra y Malka Leon, profesionales activas desde 2014.'),
+  acts:[{t:'link',href:'#/software',l:L('See solutions','Ver soluciones')},{t:'link',href:'#/about',l:L('Meet the founders','Conocer a las fundadoras')}]},
+
+ {id:'pillars',
+  kw:['cuatro pilares','4 pilares','cuales son los pilares','pilares de nexgen','los pilares','four pillars','what are the pillars'],
+  q:L('What are the four pillars?','¿Cuáles son los cuatro pilares?'),
+  a:L('<b>The four pillars of NexGen Tax Pro:</b><ul class="as-list"><li>1. <b>Tax Software</b> — preparation, validation, AI document import, e-file and bank products.</li><li>2. <b>Tax Preparer Training</b> — practical training from zero to advanced, tax law, Due Diligence and live support.</li><li>3. <b>Tax Office Startup & Support</b> — PTIN, EFIN, WISP, team setup, processes and bank partners.</li><li>4. <b>Business Growth</b> — marketing, client retention and strategies to increase volume and professionalize your office.</li></ul>',
+      '<b>Los cuatro pilares de NexGen Tax Pro:</b><ul class="as-list"><li>1. <b>Software de impuestos</b> — preparación, validación, importación con IA, e-file y productos bancarios.</li><li>2. <b>Capacitación para preparadores</b> — formación práctica desde cero hasta nivel avanzado, leyes, Due Diligence y soporte en vivo.</li><li>3. <b>Apertura y soporte de oficina</b> — PTIN, EFIN, WISP, configuración de equipo, procesos y bancos aliados.</li><li>4. <b>Crecimiento del negocio</b> — marketing, retención de clientes y estrategias para aumentar volumen y profesionalizar tu oficina.</li></ul>'),
+  acts:[{t:'link',href:'#/software',l:L('See the pillars in action','Ver los pilares')},{t:'link',href:'#/book-demo',l:L('Book a demo','Reservar demo')}]},
+
+ {id:'growth',
+  kw:['conseguir clientes','clientes nuevos','marketing','publicidad','hacer crecer mi negocio','crecer mi negocio','aumentar clientes','retener clientes','vender mas','grow my business','get more clients','how do i get clients','how can i get clients','more clients','marketing support'],
+  q:L('How do you help me get clients and grow?','¿Cómo me ayudan a conseguir clientes y crecer?'),
+  a:L('<b>Business Growth is a core pillar.</b> We help you:<ul class="as-list"><li>Attract new clients with marketing templates and practical campaigns.</li><li>Retain clients year after year with better service and follow-up structure.</li><li>Increase return volume and organize your office to serve more people.</li><li>Professionalize your brand, processes and team so your business grows beyond one season.</li></ul>This support is integrated with the software and training, not sold as an isolated manual.',
+      '<b>El crecimiento del negocio es un pilar central.</b> Te ayudamos a:<ul class="as-list"><li>Atraer clientes nuevos con plantillas de marketing y campañas prácticas.</li><li>Retener clientes año tras año con mejor servicio y seguimiento.</li><li>Aumentar el volumen de declaraciones y organizar la oficina para atender a más personas.</li><li>Profesionalizar tu marca, procesos y equipo para crecer más allá de una temporada.</li></ul>Este apoyo está integrado con el software y la capacitación, no es un manual aislado.'),
+  acts:[{t:'link',href:'#/software',l:L('See growth support','Ver apoyo de crecimiento')},{t:'link',href:'#/book-demo',l:L('Talk to the team','Hablar con el equipo')}]},
+
+ {id:'ideal_client',
+  kw:['para quien es','quien es el cliente ideal','sirve para mi','a quienes atienden','quienes pueden usar','ideal client','who is this for','is this for me','who do you serve'],
+  q:L('Who is NexGen for?','¿Para quién es NexGen?'),
+  a:L('<b>We serve four profiles:</b><ul class="as-list"><li>🎓 <b>People new to the industry</b> who want to learn from zero with practical training and live guidance.</li><li>💼 <b>Independent preparers</b> who want to formalize, professionalize and expand their client base.</li><li>🏢 <b>Small and mid-sized tax office owners</b> who want to modernize technology, train their team and improve efficiency and margins.</li><li>🚀 <b>Entrepreneurs and investors</b> opening their first tax office turnkey.</li></ul>We serve professionals across all 50 U.S. states and Puerto Rico, in English and Spanish.',
+      '<b>Atendemos cuatro perfiles:</b><ul class="as-list"><li>🎓 <b>Personas nuevas en la industria</b> que quieren aprender desde cero con capacitación práctica y acompañamiento en vivo.</li><li>💼 <b>Preparadores independientes</b> que desean formalizar, profesionalizar y ampliar su cartera de clientes.</li><li>🏢 <b>Dueños de oficinas pequeñas y medianas</b> que buscan modernizar su tecnología, entrenar a su equipo y mejorar eficiencia y márgenes.</li><li>🚀 <b>Emprendedores e inversionistas</b> que abren su primera oficina de impuestos llave en mano.</li></ul>Atendemos profesionales en los 50 estados de EE. UU. y Puerto Rico, en inglés y español.'),
+  acts:[{t:'link',href:'#/book-demo',l:L('Find your fit','Encuentra tu opción')},{t:'link',href:'#/software',l:L('See solutions','Ver soluciones')}]},
+
+ {id:'beginner',
+  kw:['no se nada','soy nuevo','empezar desde cero','sin experiencia','necesito experiencia','quiero aprender a hacer taxes','nunca he preparado','como empiezo','beginner','start from zero','new to taxes','i am new','im new','know nothing','no experience','how do i start','how to start','where do i start','want to learn taxes','learn taxes'],
+  q:L('I am new. How do I start?','Soy nuevo. ¿Cómo empiezo?'),
+  a:L('<b>You can start from zero.</b> The guided path is:<ul class="as-list"><li>1. <b>Practical training</b> on real cases, software use, IRS tax law and Due Diligence.</li><li>2. <b>PTIN guidance</b> so you can prepare returns legally as an individual.</li><li>3. <b>Hands-on software practice</b> with live support while you learn.</li><li>4. <b>EFIN and WISP guidance</b> when you are ready to open or structure your own office.</li></ul>You do not need prior experience to begin the training path. The team confirms the best starting point for your situation.',
+      '<b>Puedes empezar desde cero.</b> La ruta guiada es:<ul class="as-list"><li>1. <b>Capacitación práctica</b> con casos reales, uso del software, leyes del IRS y Due Diligence.</li><li>2. <b>Orientación para tu PTIN</b> para que puedas preparar declaraciones legalmente como persona.</li><li>3. <b>Práctica guiada en el software</b> con acompañamiento en vivo mientras aprendes.</li><li>4. <b>Orientación EFIN y WISP</b> cuando estés listo para abrir o estructurar tu propia oficina.</li></ul>No necesitas experiencia previa para comenzar la ruta de capacitación. El equipo confirma contigo el mejor punto de inicio.'),
+  acts:[{t:'link',href:'#/book-demo/training',l:L('Start with training','Empezar con capacitación')},{t:'link',href:'#/book-demo',l:L('Talk to the team','Hablar con el equipo')}]},
+
+ {id:'support_workflow',
+  kw:['como funciona el soporte','ayuda todo el ano','ayuda todo el año','organizar clientes','flujo de trabajo','varios preparadores','equipo de preparadores','support all year','workflow','team of preparers','ongoing support'],
+  q:L('How does support and office workflow work?','¿Cómo funcionan el soporte y el flujo de oficina?'),
+  a:L('<b>Support is year-round, not only during filing season.</b> We help you:<ul class="as-list"><li>Organize client intake, documents and return status.</li><li>Coordinate multiple preparers and office roles.</li><li>Set up processes for review, signatures and e-file.</li><li>Answer technical and operational questions in English or Spanish throughout the year.</li><li>Keep your office aligned with WISP and IRS compliance requirements.</li></ul>',
+      '<b>El soporte es durante todo el año, no solo en temporada.</b> Te ayudamos a:<ul class="as-list"><li>Organizar la recepción de clientes, documentos y estatus de cada declaración.</li><li>Coordinar varios preparadores y roles dentro de la oficina.</li><li>Definir procesos de revisión, firmas y e-file.</li><li>Resolver dudas técnicas y operativas en inglés o español durante todo el año.</li><li>Mantener tu oficina alineada con los requisitos de cumplimiento WISP e IRS.</li></ul>'),
+  acts:[{t:'link',href:'#/training-support',l:L('See support','Ver soporte')},{t:'link',href:'#/book-demo',l:L('Book a demo','Reservar demo')}]},
+
  /* --- MACRO-INTENTS (Cuando el usuario pide panorama general o comparativas completas) --- */
  {id:'price',
-  kw:['precio','precios','costo','costos','cuanto cuesta','cuanto valen','tarifas','paquetes','packages','planes','pricing','cotizacion','lista de precios'],
+  kw:['precio','precios','costo','costos','cuanto cuesta','cuanto vale','cuanto sale','que precio','valor','cuanto valen','tarifas','paquetes','packages','planes','pricing','cotizacion','lista de precios'],
   q:L('See all 2026 Packages','Ver los 3 paquetes 2026'),
   a:L('We offer three tailored <b>2026 annual packages</b> according to your office stage:<ul class="as-list"><li><b>1. Software Only</b> — Ideal if you already prepare: Desktop or Online license, setup, bank products & tech support.</li><li><b>2. Pro + Training</b> <span class="as-badge">Most Popular</span> — Software + live classes, tax law, due diligence & hands-on coaching.</li><li><b>3. Tax Office Startup</b> — Turnkey office launch: Software + Training + EFIN/PTIN, WISP manual & marketing.</li></ul>Our team provides personalized quotes and options based on your office needs. Would you like to schedule a quick demo or chat with us?',
       'Ofrecemos 3 paquetes adaptados según la etapa de tu negocio de impuestos:<ul class="as-list"><li><b>1. Solo Software</b> — Ideal si ya tienes experiencia: licencia Desktop u Online, onboarding, bancos y soporte técnico.</li><li><b>2. Pro + Capacitación</b> <span class="as-badge">Más Popular</span> — El software completo + clases en vivo, leyes del IRS, due diligence y mentoría práctica.</li><li><b>3. Tax Office Startup</b> — Tu oficina llave en mano: Software + Capacitación + trámite EFIN/PTIN, manual WISP y marketing.</li></ul>Nuestro equipo te brinda tarifas personalizadas y facilidades según las necesidades de tu oficina. ¿Te gustaría agendar una demo o hablar por WhatsApp?'),
@@ -2103,12 +2160,12 @@ const KB=[
  {id:'vs',
   kw:['competencia','competitor','drake','atx','taxslayer','crosslink','proseries','versus','vs','por que nexgen','why nexgen','mejor que','comparar'],
   q:L('Why choose NexGen over other software?','¿Por qué elegir NexGen frente a otros?'),
-  a:L('Most traditional suites (like Drake or ATX) charge thousands just for a license and leave you on your own with manuals. At NexGen, you get modern software with AI plus a real bilingual human team that trains you, helps with your EFIN/WISP and answers the phone all year round with tailored plans.',
-      'La mayoría de programas tradicionales (como Drake o ATX) te cobran miles de dólares solo por la licencia y te dejan solo leyendo manuales. En NexGen tienes software moderno con IA y un equipo humano real en tu idioma que te capacita, te ayuda con tu EFIN/WISP y te responde todo el año con planes accesibles y facilidades.'),
+  a:L('Most traditional suites (like Drake or ATX) sell a rigid license and leave you on your own with manuals. At NexGen, you get modern software with AI plus a real bilingual human team that trains you, helps with your EFIN/WISP and answers the phone all year round with tailored plans.',
+      'La mayoría de programas tradicionales (como Drake o ATX) te venden una licencia rígida y te dejan solo leyendo manuales. En NexGen tienes software moderno con IA y un equipo humano real en tu idioma que te capacita, te ayuda con tu EFIN/WISP y te responde todo el año con planes accesibles y facilidades.'),
   acts:[{t:'link',href:'#/software',l:L('Compare plans','Comparar planes')},{t:'link',href:'#/book-demo',l:L('Book a demo','Reservar demo')}]},
 
  {id:'about',
-  kw:['about','kellys','sierra','malka','leon','fundadoras','duenas','quienes son','owners','nosotros','historia','experiencia','2014'],
+  kw:['kellys','sierra','malka','leon','fundadoras','duenas','quienes son','owners','nosotros','historia','experiencia','2014','who is behind nexgen'],
   q:L('Who is behind NexGen Tax Pro?','¿Quiénes están detrás de NexGen?'),
   a:L('NexGen Tax Pro is led by co-owners <b>Kellys Sierra</b> and <b>Malka Leon</b>, seasoned tax professionals active in the industry since 2014. Because they run tax operations themselves, they built the exact ecosystem of software, training and human mentorship they wished existed when they started.',
       'Detrás de NexGen Tax Pro están sus fundadoras y copropietarias <b>Kellys Sierra</b> y <b>Malka Leon</b>, profesionales de impuestos con trayectoria activa desde 2014. Como ellas mismas viven el día a día de las temporadas fiscales, crearon el ecosistema exacto de software, capacitación y apoyo humano que les habría encantado tener al empezar.'),
@@ -2164,7 +2221,7 @@ const KB=[
   acts:[{t:'link',href:CONFIG.formalooUrl,l:L('Official form','Formulario oficial')},{t:'link',href:'#/about',l:L('Meet the team','Conocer al equipo')}]}
 ];
 
-const SUGGEST=['earlybird','price','match','modal','pkg_startup','demo'];
+const SUGGEST=['what_software_does','how_helps','match','pkg_startup','earlybird','demo'];
 
 /* =====================================================================
    LEGAL STRUCTURES — DRAFT, require legal review
@@ -2177,7 +2234,7 @@ privacy:{
   ['How the information is used','To respond to your request, schedule a demo, provide training or support, and operate the site. [Any marketing use: pending decision]'],
   ['Drafts in your browser','While you complete a questionnaire, non-sensitive answers are kept in your browser session so you can go back. They are removed when you close the tab or clear the draft. Signatures are never stored in the browser.'],
   ['Form submissions','[Pending: where submissions are stored, who can access them, retention period, service providers and security measures. These must be confirmed before launch.]'],
-  ['Virtual assistant','The assistant answers from approved information and does not receive or store your messages in this version. [If an AI service is connected in the future, this section must be updated.]'],
+  ['Virtual assistant','Open-ended questions may be processed through Cloudflare Workers AI from our server. We do not intentionally store chat messages. Please do not send Social Security numbers, ITINs, bank details or tax documents. The assistant provides general information, not personalized tax advice.'],
   ['Cookies and analytics','[Pending: no analytics or marketing tools are configured in this version.]'],
   ['Your choices','You can ask the team to access, correct or delete the information you sent. [Applicable rights and procedure: pending legal review]'],
   ['Changes','We may update this policy. [Effective date: pending]']],
@@ -2187,7 +2244,7 @@ privacy:{
   ['Cómo se usa la información','Para responder a tu solicitud, agendar una demostración, brindar capacitación o soporte y operar el sitio. [Uso para mercadeo: decisión pendiente]'],
   ['Borradores en tu navegador','Mientras completas un cuestionario, las respuestas no sensibles se guardan en la sesión de tu navegador para que puedas volver atrás. Se eliminan al cerrar la pestaña o borrar el borrador. Las firmas nunca se guardan en el navegador.'],
   ['Envío de formularios','[Pendiente: dónde se almacenan los envíos, quién puede acceder, periodo de conservación, proveedores y medidas de seguridad. Debe confirmarse antes de lanzar.]'],
-  ['Asistente virtual','El asistente responde con información aprobada y en esta versión no recibe ni guarda tus mensajes. [Si en el futuro se conecta un servicio de IA, esta sección debe actualizarse.]'],
+  ['Asistente virtual','Las preguntas abiertas pueden procesarse mediante Cloudflare Workers AI desde nuestro servidor. No almacenamos intencionalmente los mensajes del chat. Por favor no envíes números de Seguro Social, ITIN, datos bancarios ni documentos tributarios. El asistente brinda información general, no asesoría fiscal personalizada.'],
   ['Cookies y analítica','[Pendiente: en esta versión no hay herramientas de analítica ni de mercadeo configuradas.]'],
   ['Tus opciones','Puedes pedir al equipo que acceda, corrija o elimine la información que enviaste. [Derechos aplicables y procedimiento: pendiente de revisión legal]'],
   ['Cambios','Podemos actualizar esta política. [Fecha de vigencia: pendiente]']]},
@@ -2237,20 +2294,19 @@ function norm(s){
 /* phonetic / typo normalizer: maps common misspellings and synonyms to canonical intents */
 function correctTypos(text){
   let t=' '+norm(text)+' ';
+  /* Normaliza solo errores ortográficos y variantes, preservando las palabras originales. */
   const rules=[
-    [/\b(presios?|presioz|prezios?|costos?|cost|cuesta|cuanto(s)?|kuanto(s)?|cuamto|valen?|tarifas?|packages?)\b/g,' precio '],
-    [/\b(sofware|sofwer|sopware|softwar|softwere|softwarez|programa|sistema|plataforma)\b/g,' software '],
-    [/\b(treining|trainin|capacitasion|capacitacion|capasitacion|capacitar|cursos?|aprender|clases?|taller)\b/g,' training '],
-    [/\b(ofisina|oficinas?|startup|abrir|inisiar|iniciar|montar|empesar|empezar|empieso|empiezo|abro|inicio|crear oficina)\b/g,' startup '],
-    [/\b(erli\s*bird|earlybird|early\s*bird|descuentos?|ofertas?|promocion(es)?|rebaja)\b/g,' earlybird '],
-    [/\b(cumplimiento|regulacion(es)?|licencia|permisos?)\b/g,' compliance '],
-    [/\b(drake|atx|taxslayer|competencia|competitor|versus|vs|otros softwares?|otro software)\b/g,' competencia '],
-    [/\b(banco|bancos|bank|anticipo|adelanto|reembolso|cash advance|refund advance)\b/g,' bankproducts '],
-    [/\b(ia|ai|inteligencia artificial|escanear|ocr|importar|importacion|w2|w-2|1099|k1|k-1|1098)\b/g,' aiimport '],
-    [/\b(cuestionarios?|formaloo|forma|link|llenar|inscribir|registro)\b/g,' formulario '],
-    [/\b(orario|horarios?|direccion|donde estan|ubicacion|ubicados|ciudad|florida|orlando|miami)\b/g,' ubicacion '],
-    [/\b(kellys|malka|fundadoras?|duenas?|quienes son|nosotros|experiencia|historia)\b/g,' about '],
-    [/\b(contacto|telefono|llamar|numero|celular|email|correo|hablar|asesor)\b/g,' contacto ']
+    [/\b(presios?|presioz|prezios?)\b/g,'precios'],
+    [/\b(sofware|sofwer|sopware|softwar|softwere|softwarez)\b/g,'software'],
+    [/\b(capacitasion|capasitasion|capacitacion|capatacion|trainin|treining)\b/g,'capacitacion'],
+    [/\b(ofisina|oficinaa|oficina|oficinas)\b/g,'oficina'],
+    [/\b(empesar|empieso|enpiezo|empiezo)\b/g,'empezar'],
+    [/\b(nesecito|nesesito|nesecita|nesesita)\b/g,'necesito'],
+    [/\b(tramitar|tramite|tramites)\b/g,'tramite'],
+    [/\b(comienso|comienzo|empezando|empesando)\b/g,'empezar'],
+    [/\b(negosio|negocio|negocios)\b/g,'negocio'],
+    [/\b(servisio|servicio|servicios)\b/g,'servicio'],
+    [/\b(asesoria|asesorias|asesoramiento)\b/g,'asesoria']
   ];
   rules.forEach(([re,rep])=>{t=t.replace(re,rep)});
   return t.trim();
@@ -2714,7 +2770,7 @@ function asSay(html,after,instant){
   });
   return asQ;
 }
-let lastTopic=null,turnCount=0;
+let lastTopic=null,turnCount=0,asHistory=[];
 
 /* Analiza cómo preguntó el usuario para abrir la respuesta como un humano real */
 function buildHumanBridge(rawUserText,targetId,fromChip){
@@ -2729,7 +2785,7 @@ function buildHumanBridge(rawUserText,targetId,fromChip){
     return es?'Respondiendo directamente a tu pregunta: ':'Answering your question directly: ';
   }
   if(/\b(cuanto|precio|cuesta|vale|tarifa|how much|cost)\b/.test(q)){
-    return es?'Te hablo claro y directo sobre los números: ':'Let\'s talk clear numbers on that: ';
+    return es?'Sobre la inversión y cómo manejamos las cotizaciones personalizadas: ':'On investment and how we handle personalized quotes: ';
   }
   if(/\b(diferencia|cambia|mejor|compar|difference|between|vs)\b/.test(q)){
     return es?'¡Muy buena pregunta! La diferencia clave está en esto: ':'Great question! The key difference comes down to this: ';
@@ -2802,12 +2858,12 @@ function greetingForHour(){
   return h<12?(es?'¡Buenos días!':'Good morning!'):h<19?(es?'¡Buenas tardes!':'Good afternoon!'):(es?'¡Buenas noches!':'Good evening!');
 }
 function asGreet(instant){
-  asBody.innerHTML='';asQ=Promise.resolve();lastTopic=null;turnCount=0;
+  asBody.innerHTML='';asQ=Promise.resolve();lastTopic=null;turnCount=0;asHistory=[];
   const g=greetingForHour();
   const es=lang==='es';
   const msg=es
-    ?g+' ¡Qué gusto saludarte! 👋 Soy tu asesor de <b>NexGen Tax Pro</b>.<br><br>Escríbeme con total confianza como si hablaras con alguien del equipo: pregúntame qué es la tarifa <b>Early-Bird</b>, cuánto cuesta cada paquete, cómo sacar tu <b>EFIN/WISP</b> o cuál plan te conviene según tu experiencia.'
-    :g+' Great to have you here! 👋 I\'m your <b>NexGen Tax Pro</b> advisor.<br><br>Ask me anything in your own words—like how the <b>Early-Bird</b> discount works, which package fits your experience, or how we help with your <b>EFIN & WISP</b>.';
+    ?g+' ¡Qué gusto saludarte! 👋 Soy tu asesor de <b>NexGen Tax Pro</b>.<br><br>Escríbeme con total confianza como si hablaras con alguien del equipo: pregúntame para qué sirve nuestro software, cómo te ayudamos a empezar desde cero, cómo tramitar tu <b>EFIN/WISP</b> o qué incluye cada paquete 2026.'
+    :g+' Great to have you here! 👋 I\'m your <b>NexGen Tax Pro</b> advisor.<br><br>Ask me anything in your own words—like what our software does, how we help you start from zero, how we guide your <b>EFIN & WISP</b>, or what each 2026 package includes.';
   asSay(msg,()=>{asChips(topicChips(SUGGEST));asBody.scrollTop=0},instant);
   asStarted=true;
 }
@@ -2835,8 +2891,8 @@ asst.addEventListener('keydown',e=>{if(e.key==='Escape')toggleAsst(false)});
     if(asStarted||asst.classList.contains('on'))return;
     const es=lang==='es';
     $('#asWelcomeTxt').textContent=es
-      ?'¡Aquí estaré para responder cualquier duda que tengas sobre precios 2026, software o la apertura de tu oficina!'
-      :'I\'ll be right here to answer any questions you have about 2026 pricing, software or opening your office!';
+      ?'¡Aquí estaré para responder cualquier duda sobre nuestro software, capacitación, los paquetes 2026 o cómo abrir y hacer crecer tu oficina!'
+      :'I\'ll be right here to answer any questions about our software, training, the 2026 packages, or how to open and grow your office!';
     $('#asWelcomeAct').textContent=es?'Pregúntame aquí →':'Ask me here →';
     wel.hidden=false;
     /* Hacer que el avatar del botón FAB salude al entregar el mensaje */
@@ -2917,6 +2973,118 @@ asst.addEventListener('keydown',e=>{if(e.key==='Escape')toggleAsst(false)});
   });
 })();
 
+function stripLocalPrices(value){
+  return String(value||'')
+    .replace(/\$\s?\d[\d.,]*(?:\s*[-–—]\s*\$?\s?\d[\d.,]*)?/g,'una cotización personalizada')
+    .replace(/[€£]\s?\d[\d.,]*/g,'una cotización personalizada')
+    .replace(/\b\d[\d.,]*\s*(?:USD|usd|dollars?|d[oó]lares?)\b/gi,'una cotización personalizada')
+    .replace(/\b(?:mil|miles)\s+(?:de\s+)?d[oó]lares\b/gi,'una cotización personalizada')
+    .replace(/\b(?:999|1,?199|1,?299|1,?499|1,?799|1,?999|2,?499|3,?100|4,?200)\b/g,'una cotización personalizada')
+    .replace(/(una cotización personalizada)(?:\s+o\s+una cotización personalizada)+/gi,'$1')
+    .replace(/(una cotización personalizada)(?:\s+y\s+(?:el rango\s+)?una cotización personalizada)+/gi,'$1')
+    .replace(/\s{2,}/g,' ').trim();
+}
+function asTypingStart(){
+  const row=document.createElement('div');row.className='brow';
+  row.innerHTML='<span class="av2" aria-hidden="true">'+MH+'</span><div class="msg a typing" aria-hidden="true"><i></i><i></i><i></i></div>';
+  row.classList.add('tp');asst.classList.add('busy');asBody.appendChild(row);asScroll();return row;
+}
+function asTypingEnd(row){if(row&&row.parentNode)row.remove();asst.classList.remove('busy')}
+function asOpenQuestion(raw){
+  const es=lang==='es';
+  const typing=asTypingStart();
+  const endpoint=CONFIG.assistantEndpoint||'/api/chat';
+  const fallback=es
+    ?'<b>NexGen Tax Pro es más que un software de impuestos: es un ecosistema completo para profesionales tributarios.</b><ul class="as-list"><li><b>Software:</b> preparación, validación, IA, e-file y productos bancarios.</li><li><b>Capacitación:</b> desde cero hasta nivel avanzado, con práctica real y Due Diligence.</li><li><b>Apertura de oficina:</b> orientación PTIN, EFIN, WISP, procesos y bancos aliados.</li><li><b>Crecimiento:</b> marketing, retención de clientes y estructura para aumentar tu volumen.</li></ul>Cuéntame si tu duda va por el software, la capacitación, la apertura de tu oficina o el crecimiento de tu negocio.'
+    :'<b>NexGen Tax Pro is more than tax software: it is a complete ecosystem for tax professionals.</b><ul class="as-list"><li><b>Software:</b> preparation, validation, AI import, e-file and bank products.</li><li><b>Training:</b> from zero to advanced, with real practice and Due Diligence.</li><li><b>Office startup:</b> PTIN, EFIN, WISP, processes and bank partner guidance.</li><li><b>Growth:</b> marketing, client retention and structure to increase volume.</li></ul>Tell me whether your question is about the software, training, opening your office or growing your business.';
+  const showFallback=()=>{
+    asSay(fallback,()=>asChips(topicChips(['what_software_does','how_helps','ecosystem','demo']).concat([{l:tx(L('Official form','Formulario oficial')),href:CONFIG.formalooUrl}])),true);
+  };
+  fetch(endpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:raw,lang,history:asHistory.slice(-6)})})
+    .then(res=>{if(!res.ok)throw new Error('chat unavailable');return res.json()})
+    .then(data=>{
+      asTypingEnd(typing);
+      const reply=stripLocalPrices(data&&data.reply?String(data.reply):'');
+      if(!reply){showFallback();return}
+      asHistory.push({role:'user',content:raw},{role:'assistant',content:reply});
+      asHistory=asHistory.slice(-8);
+      asSay(reply,()=>asChips(topicChips(['what_software_does','how_helps','ecosystem','demo'])),true);
+    })
+    .catch(()=>{asTypingEnd(typing);showFallback()});
+}
+function scoreIntent(text,tokens){
+  const scores=new Map();
+  const add=(id,score)=>scores.set(id,Math.max(scores.get(id)||0,score));
+  const RX=[
+    ['what_software_does',26,/\b(para que (sirve|funciona|es) (el )?software|que hace (el )?software|como funciona (el )?software|explicame (el )?software|para que sirve el programa|what (does|is) the software (do|for)|how does the software work)\b/],
+    ['pkg_startup',24,/\b(startup|llave en mano|abrir (mi |una )?oficina|iniciar oficina|montar (mi |una )?oficina|primera oficina|independizarme)\b/],
+    ['ecosystem',24,/\b(que ofrecen|que servicios tienen|que es nexgen|a que se dedican|lineas de negocio|que mas ofrecen|what do you offer|what services do you have|what is nexgen|what does nexgen do)\b/],
+    ['pillars',23,/\b(cuatro pilares|4 pilares|cuales son los pilares|pilares de nexgen|four pillars|what are the pillars)\b/],
+    ['growth',22,/\b(conseguir clientes|clientes nuevos|marketing|publicidad|hacer crecer|crecer mi negocio|aumentar clientes|retener clientes|vender mas|grow my business|get more clients|how (do|can) i get (more )?clients|more clients)\b/],
+    ['ideal_client',22,/\b(para quien es|quien es el cliente ideal|sirve para mi|a quienes atienden|quienes pueden usar|ideal client|who is this for|is this for me|who do you serve)\b/],
+    ['beginner',22,/\b(no se nada|soy nuevo|empezar desde cero|sin experiencia|necesito experiencia|quiero aprender a hacer taxes|nunca he preparado|como empiezo|beginner|start from zero|new to taxes|i am new|im new|know nothing|no experience|how (do|to) (i )?start|where do i start|want to learn taxes)\b/],
+    ['support_workflow',21,/\b(como funciona el soporte|ayuda todo el ano|ayuda todo el año|organizar clientes|flujo de trabajo|varios preparadores|equipo de preparadores|support all year|workflow|team of preparers)\b/],
+    ['how_helps',21,/\b(en que me (puede|pueden|puedo|ayuda) ayudar|en que me ayuda|como me ayuda|como me (pueden|puede|puedo) ayudar|en que me beneficia|por que trabajar con ustedes|para que me sirve nexgen|que puedo lograr con nexgen|what can you help me with|how (do|can) you help me|what can nexgen do for me|why work with nexgen)\b/],
+    ['earlybird',20,/\b(early\s*bird|earlybird|preventa|pre\s*temporada|pretemporada|que es la tarifa|descuento|ahorr\w*|oferta)\b/],
+    ['wisp_only',20,/\b(wisp|plan de seguridad|manual de seguridad|salvaguardas|ftc)\b/],
+    ['efin_ptin',20,/\b(efin|ptin|numero de preparador|permiso del irs)\b/],
+    ['pkg_soft',19,/\b(solo software|software only|plan 1|paquete 1|mas barato|economico)\b/],
+    ['pkg_pro',19,/\b(pro\s*(\+|mas|y|with)?\s*(capacitacion|training)|plan pro|paquete pro|mas popular|plan 2|paquete 2)\b/],
+    ['match',18,/\b(recomiend\w*|que paquete|cual paquete|que me conviene|cual me conviene|segun mi etapa|no se cual|soy nuevo|empezar de cero|which package)\b/],
+    ['bankproducts',17,/\b(bankproducts|banco|bancos|bancario|adelanto|anticipo|prestamo|refund advance|cash advance|tpg|refund advantage|eps|reembolso)\b/],
+    ['aiimport',16,/\b(aiimport|escanear|ocr|importar|importacion|1099|w2|w-2|k1|k-1|1098|inteligencia artificial)\b/],
+    ['forms_supported',15,/\b(1040|1065|1120|990|706|709|formularios|formas|e-file|efile)\b/],
+    ['price',20,/\b(precio|precios|cuanto cuesta|cuanto vale|cuanto sale|que precio|valor|cuanto valen|tarifa|tarifas|paquete|paquetes|plan|planes|cost|pricing|how much)\b/],
+    ['train',13,/\b(training|capacitacion|cursos?|aprender|coaching|due diligence|clases)\b/],
+    ['modal',12,/\b(desktop|online|self|modalidad|nube|cloud|instalado|diferencia)\b/],
+    ['vs',12,/\b(competencia|drake|atx|taxslayer|versus|vs|mejor que|comparar)\b/],
+    ['geo',11,/\b(ubicacion|florida|orlando|miami|estados|50 states|donde estan)\b/],
+    ['about',11,/\b(about|kellys|malka|fundadoras|historia|experiencia|quienes son)\b/],
+    ['demo',10,/\b(demo|demostracion|agendar|probar|cita|ver el software)\b/],
+    ['formulario',10,/\b(formulario|formaloo|enlace|link|inscribirme|registrarme|comprar|contratar)\b/],
+    ['contact',10,/\b(contacto|telefono|llamar|correo|email|asesor|hablar)\b/],
+    ['priv',9,/\b(ssn|itin|privacidad|datos)\b/],
+    ['lang',9,/\b(idioma|language|espanol|english)\b/],
+    ['identity',8,/\b(robot|chatgpt|eres ia|are you ai|quien eres|who are you|como te llamas)\b/]
+  ];
+  RX.forEach(([id,weight,re])=>{if(re.test(text))add(id,weight)});
+  KB.forEach(k=>{
+    let sc=0;
+    k.kw.forEach(w=>{
+      const wn=norm(w);if(!wn)return;
+      if(text.includes(wn))sc+=wn.length>5?3:2;
+      else if(fuzzyMatch(tokens,wn))sc+=1;
+    });
+    if(sc)add(k.id,sc);
+  });
+  return [...scores].map(([id,score])=>({id,score})).sort((a,b)=>b.score-a.score);
+}
+function asAnswerComposite(ids,raw){
+  const ks=ids.slice(0,2).map(id=>KB.find(x=>x.id===id)).filter(Boolean);
+  if(!ks.length)return;
+  lastTopic=ks[0].id;turnCount++;
+  const bridge=buildHumanBridge(raw,ks[0].id,false);
+  const body=ks.map((k,i)=>(i?'<div style="height:10px"></div>':'')+tx(k.a)).join('');
+  const acts=[];const seen=new Set();
+  ks.forEach(k=>(k.acts||[]).forEach(a=>{
+    const key=a.t==='link'?a.href:a.t==='tel'?a.k:a.l;
+    if(seen.has(key))return;seen.add(key);
+    acts.push(a.t==='link'?{l:tx(a.l),href:a.href}:a.t==='tel'?{l:CONFIG.phones[a.k].display,href:'tel:'+CONFIG.phones[a.k].tel}:{l:tx(a.l),fn:()=>setLang(lang==='en'?'es':'en')});
+  }));
+  asSay((bridge?'<span class="as-bridge">'+bridge+'</span>':'')+body,()=>{if(acts.length)asChips(acts.slice(0,4));asChips(topicChips(SUGGEST.filter(x=>!ids.includes(x)).slice(0,4)))},false);
+}
+function asReply(raw,normalized){
+  const n=normalized||correctTypos(raw);
+  const tokens=n.split(/\s+/).filter(Boolean);
+  const scored=scoreIntent(n,tokens);
+  const top=scored[0];
+  const strong=scored.filter(item=>item.score>=20);
+  const conjunction=/\b(y|and|tambien|también|ademas|además)\b/.test(n);
+  if(conjunction&&strong.length>=2){asAnswerComposite([strong[0].id,strong[1].id],raw);return}
+  if(top&&top.score>=7){asAnswer(top.id,raw,false);return}
+  asOpenQuestion(raw);
+}
+
 $('#asForm').addEventListener('submit',e=>{
   e.preventDefault();const raw=asIn.value.trim();if(!raw)return;asIn.value='';asTouched=true;
   const n=correctTypos(raw);
@@ -2943,46 +3111,8 @@ $('#asForm').addEventListener('submit',e=>{
   if(/(deduct|deduc|write.?off|how much (tax|do i owe)|cuanto (debo|pago)|cuanto me (devuelven|regresan)|owe|adeudo|should i (file|claim)|debo (declarar|presentar)|credito tributario|tax credit)/.test(n)){
     asSay(es?'Mira, como soy el asistente de software y programas para preparadores, no doy asesoría fiscal sobre declaraciones personales. Pero si buscas nuestro software, capacitación o productos bancarios para tu oficina, ¡con todo gusto te ayudo!':'Since I focus on software and programs for tax preparers, I can\'t give personal tax filing advice. But if you\'re asking about our software, training or bank products for your office, I\'m happy to help!',()=>asChips(topicChips(['price','modal','train','contact'])));return}
 
-  /* 4. Reglas de prioridad quirúrgica (de más específica a más general) */
-  const RX=[
-    ['earlybird',22,/\b(early\s*bird|earlybird|preventa|pre\s*temporada|pretemporada|que es la tarifa|descuento|ahorr\w*|oferta)\b/],
-    ['wisp_only',21,/\b(wisp|plan de seguridad|manual de seguridad|salvaguardas|ftc)\b/],
-    ['efin_ptin',21,/\b(efin|ptin|numero de preparador|permiso del irs)\b/],
-    ['pkg_soft',20,/\b(solo software|software only|999|1199|plan 1|paquete 1|mas barato|economico)\b/],
-    ['pkg_pro',20,/\b(pro\s*(\+|mas|y|with)?\s*(capacitacion|training)|plan pro|paquete pro|1299|1499|mas popular|plan 2|paquete 2)\b/],
-    ['pkg_startup',20,/\b(startup|1799|1999|2499|llave en mano|abrir (mi |una )?oficina|iniciar oficina|montar (mi |una )?oficina|primera oficina)\b/],
-    ['match',18,/\b(recomiend\w*|que paquete|cual paquete|que me conviene|cual me conviene|segun mi etapa|no se cual|soy nuevo|empezar de cero)\b/],
-    ['bankproducts',17,/\b(bankproducts|banco|bancos|bancario|adelanto|anticipo|prestamo|refund advance|cash advance|tpg|refund advantage|eps|reembolso)\b/],
-    ['aiimport',16,/\b(aiimport|escanear|ocr|importar|importacion|1099|w2|w-2|k1|k-1|1098|inteligencia artificial)\b/],
-    ['forms_supported',15,/\b(1040|1065|1120|990|706|709|formularios|formas|e-file|efile)\b/],
-    ['price',14,/\b(precio|precios|cuanto cuesta|cuanto valen|tarifa|tarifas|paquete|paquetes|plan|planes|cost|pricing)\b/],
-    ['train',13,/\b(training|capacitacion|cursos?|aprender|coaching|due diligence|clases)\b/],
-    ['modal',12,/\b(desktop|online|self|modalidad|nube|cloud|instalado|diferencia)\b/],
-    ['vs',12,/\b(competencia|drake|atx|taxslayer|versus|vs|mejor que|comparar)\b/],
-    ['geo',11,/\b(ubicacion|florida|orlando|miami|estados|50 states|donde estan)\b/],
-    ['about',11,/\b(about|kellys|malka|fundadoras|historia|experiencia|quienes son)\b/],
-    ['demo',10,/\b(demo|demostracion|agendar|probar|cita|ver el software)\b/],
-    ['formulario',10,/\b(formulario|formaloo|enlace|link|inscribirme|registrarme|comprar|contratar)\b/],
-    ['contact',10,/\b(contacto|telefono|llamar|correo|email|asesor|hablar)\b/],
-    ['priv',9,/\b(ssn|itin|privacidad|datos)\b/],
-    ['lang',9,/\b(idioma|language|espanol|english)\b/],
-    ['identity',8,/\b(robot|chatgpt|eres ia|are you ai|quien eres|who are you|como te llamas)\b/]
-  ];
-
-  let best=null,bs=0;
-  for(const[id,w,re]of RX){if(re.test(n)){best=id;bs=w;break}}
-  KB.forEach(k=>{
-    let sc=0;
-    k.kw.forEach(w=>{
-      const wn=norm(w);
-      if(!wn)return;
-      if(n.includes(wn))sc+=wn.length>5?3:2;
-      else if(fuzzyMatch(tokens,wn))sc+=1;
-    });
-    if(sc>bs){bs=sc;best=k.id}
-  });
-  if(best)asAnswer(best,raw,false);
-  else asSay(es?'Mira, sobre ese punto tan específico prefiero no inventarte un dato que no sea 100% exacto. Pero dime si tu duda va por alguno de estos temas o abre nuestro formulario oficial para que el equipo de Kellys y Malka te responda personalmente:':'On that very specific point, I\'d rather not guess. Tell me if your question relates to one of these topics, or open our official form so Kellys and Malka\'s team can answer you personally:',()=>asChips(topicChips(['earlybird','price','match','pkg_startup']).concat([{l:tx(L('Official form','Formulario oficial')),href:CONFIG.formalooUrl},{l:CONFIG.phones.sw.display,href:'tel:'+CONFIG.phones.sw.tel}])));
+  /* 4. Motor de intención + IA de respaldo */
+  asReply(raw,n);
 });
 
 /* =====================================================================
