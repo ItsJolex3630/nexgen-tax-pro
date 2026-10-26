@@ -73,6 +73,19 @@ COMPLIANCE:
 - NexGen guides the process but never guarantees IRS approval.
 - Never request SSNs, ITINs, bank numbers or tax documents in chat.
 
+TRAINING FORMATS:
+- Live Zoom classes with real-time software demonstrations.
+- Interactive workshops plus a 24/7 recorded session library.
+- Pre-season (October–January): intensive onboarding, updated tax law and software setup.
+- Active season (February–April): live clinics for complex real client cases.
+- Topics include individual Form 1040 and corporate Forms 1120, 1120-S and 1065, IRS Due Diligence and bank products.
+
+SUPPORT HOURS:
+- Peak season (January–April): Monday–Saturday, 8:00 AM–8:00 PM Eastern Time. Extended night support around e-file deadlines.
+- Off-season (May–December): Monday–Friday, 9:00 AM–5:00 PM Eastern Time for amendments, extensions and planning.
+- Virtual assistant and WhatsApp: continuous 24/7 guidance.
+- Human team channels: phone and email listed below.
+
 CONTACT:
 - Software and demos: (407) 241-9326
 - Team and office launch: (321) 558-0061
