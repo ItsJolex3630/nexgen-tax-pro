@@ -8,6 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0907'/%3E%3Cpath d='M14 44V20l36 24V20' fill='none' stroke='%23c9a24b' stroke-width='7' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
 :root{
+color-scheme:dark;
 --bg:#0a0907;--surface:#13110e;--elev:#1a1713;--gold:#c9a24b;--gold-hi:#e3c581;--gold-dk:#7a5a14;
 --text:#f4efe4;--mut:#a79e8c;--mut2:#756d5e;--line:rgba(201,162,75,.22);--line-soft:rgba(201,162,75,.11);
 --green:#10b981;--amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;
@@ -15,7 +16,7 @@
 --shadow:0 26px 60px -34px #000;--radius:18px;--sidebar:258px;--top:76px;
 }
 *,*::before,*::after{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;color-scheme:dark}
 body{margin:0;background:var(--bg);color:var(--text);font:400 15px/1.55 var(--sans);min-height:100vh;overflow-x:hidden}
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(900px 600px at 18% -10%,rgba(201,162,75,.14),transparent 60%),radial-gradient(700px 520px at 92% 0%,rgba(201,162,75,.08),transparent 62%),radial-gradient(700px 500px at 60% 110%,rgba(122,90,20,.08),transparent 65%)}
 body.modal-open{overflow:hidden}
@@ -178,7 +179,69 @@ tbody tr:hover{background:rgba(201,162,75,.035)}
 .chip{border:1px solid var(--line-soft);background:rgba(255,255,255,.02);color:var(--mut);border-radius:99px;padding:7px 12px;font:700 .66rem var(--sans);min-height:32px}
 .chip:hover{border-color:var(--line);color:var(--text)}
 .chip.active{background:var(--bg);border-color:var(--gold);color:var(--gold-hi)}
-.select{height:34px;border-radius:9px;border:1px solid var(--line-soft);background:var(--surface);color:var(--text);padding:0 10px;font-size:.7rem;min-width:130px}
+/* Selects & Dropdowns Estilo Oficial NexGen */
+select, select.input, .select, .season-select {
+  color-scheme: dark;
+  background-color: var(--elev);
+  color: var(--text);
+  border: 1px solid var(--line-soft);
+  border-radius: 9px;
+  padding: 0 36px 0 12px;
+  font-size: .78rem;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23c9a24b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: calc(100% - 12px) center;
+  background-size: 14px;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s;
+}
+select.input {
+  width: 100%;
+  min-height: 38px;
+  background-color: var(--elev);
+}
+.select {
+  height: 34px;
+  min-width: 130px;
+  font-size: .7rem;
+}
+.season-select {
+  height: 40px;
+  border-radius: 11px;
+  font-size: .76rem;
+}
+select:focus, select.input:focus, .select:focus, .season-select:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,162,75,.18);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23e3c581' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+select option, .select option, select.input option, .season-select option {
+  background-color: #171410 !important;
+  color: #f4efe4 !important;
+  padding: 10px 14px;
+  font-size: .82rem;
+}
+select option:checked {
+  background-color: #262119 !important;
+  color: var(--gold-hi) !important;
+  font-weight: 600;
+}
+select optgroup, .select optgroup, select.input optgroup {
+  background-color: #100e0b !important;
+  color: var(--gold) !important;
+  font-weight: 700;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 8px 10px 4px;
+}
+select option:disabled {
+  color: var(--mut2) !important;
+}
 .view-toggle{display:flex;border:1px solid var(--line-soft);border-radius:9px;overflow:hidden;margin-left:auto}
 .view-toggle button{border:0;background:transparent;color:var(--mut);padding:7px 10px;font-size:.65rem;font-weight:700}
 .view-toggle button.active{background:rgba(201,162,75,.13);color:var(--gold-hi)}
