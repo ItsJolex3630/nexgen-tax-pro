@@ -23,6 +23,8 @@ build/
 # Cloudflare & Wrangler
 .wrangler/
 .mf/
+_worker.bundle
+_worker.js
 
 # Playwright & Testing
 .playwright-mcp/
