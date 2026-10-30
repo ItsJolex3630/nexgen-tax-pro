@@ -458,8 +458,13 @@ textarea.in{min-height:116px;resize:vertical}
 .as-h{background:linear-gradient(180deg,#241f17,#1a1611);border-bottom:1px solid rgba(201,162,75,.25);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px}
 .as-h b{display:block;font-size:1rem;color:#f9f5ec}
 .as-h small{color:var(--gold-hi);font-size:.75rem;line-height:1.3;display:block}
-.as-h button{margin-left:auto;background:rgba(255,255,255,.05);border:1px solid rgba(201,162,75,.3);color:#e2d9c6;border-radius:10px;width:38px;height:38px;cursor:pointer;flex:none;transition:background-color .2s,border-color .2s}
-.as-h button:hover{background:rgba(201,162,75,.2);color:#fff;border-color:var(--gold)}
+.as-h #asClose{margin-left:auto;background:rgba(255,255,255,.05);border:1px solid rgba(201,162,75,.3);color:#e2d9c6;border-radius:10px;width:38px;height:38px;cursor:pointer;flex:none;transition:background-color .2s,border-color .2s}
+.as-h #asClose:hover{background:rgba(201,162,75,.2);color:#fff;border-color:var(--gold)}
+.as-mode-toggle{margin-left:auto;display:inline-flex;background:rgba(0,0,0,.45);border:1px solid rgba(201,162,75,.32);border-radius:99px;padding:3px;gap:2px}
+.as-mode-tab{border:0;background:transparent;color:#cfc7b4;font:700 .75rem var(--sans);padding:5px 10px;border-radius:99px;cursor:pointer;white-space:nowrap;transition:background-color .2s,color .2s}
+.as-mode-tab.active{background:linear-gradient(135deg,var(--gold-hi),var(--gold));color:#17130a}
+.as-b[hidden],.as-f[hidden],.as-voice-stage[hidden],.vs-pane[hidden]{display:none!important}
+.chip-g{display:inline-flex;align-items:center;gap:6px;font:700 .72rem var(--sans);letter-spacing:.12em;text-transform:uppercase;background:linear-gradient(135deg,rgba(227,197,129,.22),rgba(201,162,75,.1));border:1px solid rgba(201,162,75,.55);color:var(--gold-hi);padding:6px 14px;border-radius:99px}
 
 .as-b{flex:1;overflow:auto;padding:16px;display:grid;gap:14px;align-content:start;background:radial-gradient(ellipse at 50% 0%,#201c15 0%,#13110e 90%)}
 .msg{max-width:90%;padding:12px 16px;border-radius:16px;font-size:.9375rem;line-height:1.52;animation:msgIn .3s cubic-bezier(.16,1,.3,1) forwards}
@@ -1122,6 +1127,23 @@ dialog{border:0;padding:0;background:transparent;max-width:none;max-height:none}
   <div class="faq rv" id="faq"></div>
  </div></section>
 
+ <section class="sec dk2" id="conciergeShowcase" aria-labelledby="h-concierge"><div class="w">
+  <div class="concierge-card rv" style="position:relative;overflow:hidden;background:radial-gradient(ellipse at 85% 20%,rgba(201,162,75,.16) 0%,#14120e 58%,#0a0a0c 100%);border:1.5px solid rgba(201,162,75,.45);border-radius:24px;padding:clamp(28px,4.5vw,44px);box-shadow:0 30px 70px -24px #000,0 0 44px -14px rgba(201,162,75,.32);display:grid;gap:28px;align-items:center">
+   <div style="display:grid;gap:14px;max-width:64ch">
+    <div><span class="chip-g pill" style="background:linear-gradient(135deg,rgba(227,197,129,.22),rgba(201,162,75,.1));border:1px solid rgba(201,162,75,.55);color:var(--gold-hi);letter-spacing:.12em" data-i18n="voice.badge">LIVE AI CONCIERGE 2026</span></div>
+    <h3 class="h2" id="h-concierge" style="color:#f7f2e6" data-i18n="concierge.title">¿Prefieres hablar en lugar de escribir?</h3>
+    <p class="lead" style="color:#d9d2c0;font-size:1.0625rem" data-i18n="concierge.desc">Prueba nuestro nuevo asistente de voz telefónico en tiempo real. Conversa directamente con el especialista virtual de NexGen Tax Pro en inglés o español sin costo ni fricción.</p>
+    <div class="cta-row" style="margin-top:8px">
+     <button type="button" class="btn btn-g" id="btnLaunchVoiceHero" data-open-voice>
+      <svg width="18" height="18" aria-hidden="true"><use href="#i-phone"/></svg>
+      <span data-i18n="concierge.btn">Iniciar Llamada de Voz IA</span>
+     </button>
+     <a class="btn btn-o" href="#/book-demo" data-i18n="cta.demo">Book a Demo</a>
+    </div>
+   </div>
+  </div>
+ </div></section>
+
  <section class="fin dk" aria-labelledby="h-fin"><div class="w">
   <h2 class="h2 tw" id="h-fin" data-i18n="fin.h2">Ready to see what *fits your office?*</h2>
   <p class="lead rv" data-i18n="fin.sub">Book a demo or talk with the team.</p>
@@ -1582,8 +1604,65 @@ dialog{border:0;padding:0;background:transparent;max-width:none;max-height:none}
    <line x1="155" y1="74" x2="155" y2="81" stroke="#5c4410" stroke-width="1.2" stroke-linecap="round"/>
   </g>
  </g>
-</svg></span><div><b>NexGen Assistant</b><small data-i18n="as.id">Virtual assistant · guided help, not a person</small></div><button type="button" id="asClose" aria-label="Close" data-i18n-attr="aria-label:close"><svg width="18" height="18" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+</svg></span><div><b>NexGen Assistant</b><small data-i18n="as.id">Virtual assistant · guided help, not a person</small></div><div class="as-mode-toggle" id="asModeToggle" role="tablist" aria-label="Modo del asistente"><button type="button" role="tab" class="as-mode-tab active" id="asTabChat" aria-selected="true" aria-controls="asBody"><span data-i18n="as.tabChat">💬 Chat</span></button><button type="button" role="tab" class="as-mode-tab" id="asTabVoice" aria-selected="false" aria-controls="asVoiceStage"><span data-i18n="as.tabVoice">📞 Llamada IA</span></button></div><button type="button" id="asClose" aria-label="Close" data-i18n-attr="aria-label:close"><svg width="18" height="18" aria-hidden="true"><use href="#i-x"/></svg></button></div>
  <div class="as-b" id="asBody" aria-live="polite"></div>
+ <div class="as-voice-stage" id="asVoiceStage" hidden>
+  <div class="vs-pane vs-pre" id="vsPanePre">
+   <div class="vs-mascot-wrap">
+    <span class="vs-sonar vs-s1" aria-hidden="true"></span>
+    <span class="vs-sonar vs-s2" aria-hidden="true"></span>
+    <div class="vs-avatar-host" data-vs-avatar></div>
+   </div>
+   <div class="vs-lang-switch" role="group" aria-label="Call language">
+    <button type="button" class="vs-lang-pill" id="vsLangEn" data-vslang="en" aria-pressed="true">🇺🇸 English</button>
+    <button type="button" class="vs-lang-pill" id="vsLangEs" data-vslang="es" aria-pressed="false">🇪🇸 Español</button>
+   </div>
+   <button type="button" class="btn btn-g vs-start-btn" id="vsStartCall">
+    <svg width="18" height="18" aria-hidden="true"><use href="#i-phone"/></svg>
+    <span data-i18n="voice.startCall">Iniciar Llamada en Vivo</span>
+   </button>
+   <p class="vs-pre-note"><span data-i18n="voice.preNote">Conversación de voz asistida por IA · Audio bidireccional</span></p>
+  </div>
+  <div class="vs-pane vs-active" id="vsPaneActive" hidden>
+   <div class="vs-active-head">
+    <span class="vs-timer" id="vsCallTimer">00:00</span>
+    <span class="vs-status-pill" id="vsStatusPill" data-i18n="voice.listening">Escuchando...</span>
+   </div>
+   <div class="vs-mascot-wrap vs-mascot-live">
+    <span class="vs-sonar vs-s1" aria-hidden="true"></span>
+    <span class="vs-sonar vs-s2" aria-hidden="true"></span>
+    <span class="vs-sonar vs-s3" aria-hidden="true"></span>
+    <div class="vs-avatar-host" data-vs-avatar></div>
+   </div>
+   <div class="as-acoustic-eq" id="asAcousticEq" data-mode="idle" aria-hidden="true">
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+   </div>
+   <div class="vs-live-caption" id="vsLiveCaption" role="status" aria-live="polite" data-i18n="voice.captionPlaceholder">Habla con naturalidad. Estoy escuchando...</div>
+   <div class="vs-quick-actions" id="vsQuickActions">
+    <a class="btn btn-o btn-s" href="#/book-demo" data-i18n="cta.demo">Agendar Demo</a>
+    <a class="btn btn-wa btn-s" href="https://wa.me/14072419326" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+   </div>
+   <div class="vs-controls">
+    <button type="button" class="vs-ctrl-btn vs-mute" id="vsBtnMute" aria-pressed="false">
+     <span data-i18n="voice.mute">Silenciar</span>
+    </button>
+    <button type="button" class="vs-ctrl-btn vs-end" id="vsBtnEnd">
+     <svg width="18" height="18" aria-hidden="true"><use href="#i-phone"/></svg>
+     <span data-i18n="voice.endCall">Colgar llamada</span>
+    </button>
+   </div>
+  </div>
+  <div class="vs-pane vs-ended" id="vsPaneEnded" hidden>
+   <div class="vs-ended-icon" aria-hidden="true">✓</div>
+   <h4 class="vs-ended-title" data-i18n="voice.endedTitle">Llamada finalizada</h4>
+   <p class="vs-ended-dur" id="vsEndDuration">00:00</p>
+   <div class="vs-ended-actions">
+    <button type="button" class="btn btn-o btn-s" id="vsBtnTranscript" data-i18n="voice.viewTranscript">Ver transcripción en Chat</button>
+    <a class="btn btn-g btn-s" id="vsBtnBookDemo" href="#/book-demo" data-i18n="cta.demo">Agendar Demo</a>
+    <button type="button" class="btn btn-k btn-s" id="vsBtnCallAgain" data-i18n="voice.callAgain">Llamar de nuevo</button>
+   </div>
+  </div>
+ </div>
  <form class="as-f" id="asForm" autocomplete="off"><label class="sr" for="asIn" data-i18n="as.lbl">Type a topic</label><input id="asIn" type="text" maxlength="160" placeholder="Type a topic…" data-i18n-attr="placeholder:as.ph"><button class="btn btn-k btn-s" type="submit" data-i18n="as.send">Send</button></form>
  <p class="as-n" data-i18n="as.note">Guided help from approved information. It gives no tax advice and never needs your SSN, documents or bank details.</p>
 </section>
@@ -1995,8 +2074,37 @@ Object.assign(D,{
 
 // --- FAQ 8 ---
 'fq.8q':['What is the Early-Bird rate?','¿Qué es la tarifa Early-Bird?'],
-'fq.8a':['Early-Bird is our pre-season promotional benefit: it locks your onboarding before the season starts at preferential terms. Availability and details are confirmed by the team in your personalized demo.','Early-Bird es nuestro beneficio promocional de pre-temporada: asegura tu onboarding antes de que empiece la temporada en condiciones preferenciales. El equipo confirma la disponibilidad y los detalles en tu demostración personalizada.']
+'fq.8a':['Early-Bird is our pre-season promotional benefit: it locks your onboarding before the season starts at preferential terms. Availability and details are confirmed by the team in your personalized demo.','Early-Bird es nuestro beneficio promocional de pre-temporada: asegura tu onboarding antes de que empiece la temporada en condiciones preferenciales. El equipo confirma la disponibilidad y los detalles en tu demostración personalizada.'],
+
+// --- Live AI Voice Concierge (as.*, voice.*, concierge.*) ---
+'as.tabChat':['💬 Chat','💬 Chat'],
+'as.tabVoice':['📞 AI Call','📞 Llamada IA'],
+'voice.badge':['LIVE AI CONCIERGE 2026','CONCIERGE DE VOZ IA EN VIVO 2026'],
+'voice.startCall':['Start Live Call','Iniciar Llamada en Vivo'],
+'voice.callStart':['Start Live Call','Iniciar Llamada en Vivo'],
+'voice.preNote':['AI-assisted voice conversation · Two-way live audio','Conversación de voz asistida por IA · Audio bidireccional'],
+'voice.listening':['Listening...','Escuchando...'],
+'voice.speaking':['Speaking...','Hablando...'],
+'voice.thinking':['Processing...','Procesando...'],
+'voice.processing':['Processing...','Procesando...'],
+'voice.mute':['Mute','Silenciar'],
+'voice.unmute':['Unmute','Activar micrófono'],
+'voice.muted':['Muted','Silenciado'],
+'voice.endCall':['End Call','Colgar llamada'],
+'voice.callEnd':['End Call','Colgar llamada'],
+'voice.endedTitle':['Call Ended','Llamada finalizada'],
+'voice.viewTranscript':['View transcript in Chat','Ver transcripción en Chat'],
+'voice.callAgain':['Call Again','Llamar de nuevo'],
+'voice.captionPlaceholder':['Speak naturally. I\'m listening...','Habla con naturalidad. Estoy escuchando...'],
+'voice.micDenied':['Microphone access denied. Please enable it or use written chat.','Acceso al micrófono denegado. Habilítalo o usa el chat escrito.'],
+'voice.showcaseTitle':['Prefer talking instead of typing?','¿Prefieres hablar en lugar de escribir?'],
+'concierge.title':['Prefer talking instead of typing?','¿Prefieres hablar en lugar de escribir?'],
+'concierge.desc':['Try our new real-time telephone voice assistant. Speak directly with the NexGen Tax Pro virtual specialist in English or Spanish at no cost and with zero friction.','Prueba nuestro nuevo asistente de voz telefónico en tiempo real. Conversa directamente con el especialista virtual de NexGen Tax Pro en inglés o español sin costo ni fricción.'],
+'concierge.btn':['Start Live AI Voice Call','Iniciar Llamada de Voz IA']
 });
+
+window.NEXGEN_I18N=window.NEXGEN_I18N||{en:{},es:{}};
+Object.keys(D).forEach(k=>{window.NEXGEN_I18N.en[k]=D[k][0];window.NEXGEN_I18N.es[k]=D[k][1]});
 /* =====================================================================
    FORM SCHEMAS (proposed structure — pending validation against the original Formaloo form)
    t: text|email|tel|select|radio|check|area|agree
@@ -2359,7 +2467,7 @@ let lang='en';
 try{const s=localStorage.getItem('nx.lang');if(s==='es'||s==='en')lang=s}catch(e){}
 try{const p=new URLSearchParams(location.search).get('lang');if(p==='es'||p==='en')lang=p}catch(e){}
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
-const t=k=>{const v=D[k];return v?v[lang==='es'?1:0]:k};
+const t=k=>{const w=window.NEXGEN_I18N&&window.NEXGEN_I18N[lang];if(w&&w[k]!==undefined)return w[k];const v=D[k];return v?v[lang==='es'?1:0]:k};
 const tx=o=>o==null?'':(typeof o==='string'?o:(o[lang]||o.en));
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function norm(s){
@@ -2462,6 +2570,7 @@ function setLang(l,silent){
   lang=l;document.documentElement.lang=l;document.documentElement.dataset.lang=l;
   try{localStorage.setItem('nx.lang',l)}catch(e){}
   $$('[data-setlang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.setlang===l)));
+  syncVoiceLangPills(l);
   applyI18n();renderFaq();renderLegal();
   forms.forEach(f=>{f.collect();f.render(false)});
   if(cur&&cur.page==='book-demo')mountLead('');
@@ -2943,14 +3052,37 @@ function asGreet(instant){
 }
 
 function asstGreetRefresh(){if(asStarted&&!asTouched)asGreet(true)}
-function toggleAsst(on){
+const asTabChat=$('#asTabChat'),asTabVoice=$('#asTabVoice'),asVoiceStage=$('#asVoiceStage'),asForm=$('#asForm');
+$$('[data-vs-avatar]').forEach(el=>{el.innerHTML=MH});
+function syncVoiceLangPills(l){
+  $$('[data-vslang]').forEach(b=>{const active=b.dataset.vslang===l;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
+}
+function setAsstMode(mode){
+  const isVoice=mode==='voice';
+  if(asTabChat){asTabChat.classList.toggle('active',!isVoice);asTabChat.setAttribute('aria-selected',String(!isVoice))}
+  if(asTabVoice){asTabVoice.classList.toggle('active',isVoice);asTabVoice.setAttribute('aria-selected',String(isVoice))}
+  if(asBody)asBody.hidden=isVoice;
+  if(asForm)asForm.hidden=isVoice;
+  if(asVoiceStage)asVoiceStage.hidden=!isVoice;
+  asst.classList.toggle('mode-voice',isVoice);
+  if(isVoice)syncVoiceLangPills(lang);
+}
+if(asTabChat)asTabChat.addEventListener('click',()=>setAsstMode('chat'));
+if(asTabVoice)asTabVoice.addEventListener('click',()=>setAsstMode('voice'));
+$$('[data-vslang]').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.vslang)));
+function toggleAsst(on,mode){
   on=on===undefined?!asst.classList.contains('on'):on;
   asst.classList.toggle('on',on);fab.setAttribute('aria-expanded',String(on));
   const wel=$('#asWelcome');if(wel)wel.hidden=true;
-  if(on){if(!asStarted)asGreet();setTimeout(()=>asIn.focus(),30)}else fab.focus({preventScroll:true});
+  if(on){
+    if(!asStarted)asGreet();
+    if(mode)setAsstMode(mode);
+    setTimeout(()=>{if(asVoiceStage&&!asVoiceStage.hidden){const s=$('#vsStartCall');if(s)s.focus()}else asIn.focus()},30);
+  }else fab.focus({preventScroll:true});
 }
 fab.addEventListener('click',()=>toggleAsst());$('#asClose').addEventListener('click',()=>toggleAsst(false));
-$$('[data-open-asst]').forEach(b=>b.addEventListener('click',()=>toggleAsst(true)));
+$$('[data-open-asst]').forEach(b=>b.addEventListener('click',()=>toggleAsst(true,'chat')));
+$$('[data-open-voice],#btnLaunchVoiceHero').forEach(b=>b.addEventListener('click',()=>toggleAsst(true,'voice')));
 asst.addEventListener('keydown',e=>{if(e.key==='Escape')toggleAsst(false)});
 
 /* ---------- Cinematic Trading Intro -> Assistant Wave -> FLIP Flight to Bottom-Right ---------- */
@@ -3331,9 +3463,10 @@ function mountLead(topic){
 fillConfig();
 document.documentElement.lang=lang;document.documentElement.dataset.lang=lang;
 $$('[data-setlang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.setlang===lang)));
+syncVoiceLangPills(lang);
 applyI18n();renderFaq();renderLegal();
 route();
-window.__nx={setLang,mountForm,CONFIG,get forms(){return forms},get lang(){return lang}};
+window.__nx={setLang,setAsstMode,toggleAsst,mountForm,CONFIG,get forms(){return forms},get lang(){return lang}};
 })();
 
 </script>
