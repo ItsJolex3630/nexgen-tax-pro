@@ -507,6 +507,9 @@ textarea.in{min-height:116px;resize:vertical}
 
 .vs-live-caption{background:rgba(0,0,0,.45);border:1px solid rgba(201,162,75,.22);border-radius:14px;padding:12px 16px;color:#f4efe4;font-size:.9rem;line-height:1.45;min-height:58px;max-width:320px;width:100%;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(16px)}
 .vs-quick-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;width:100%;max-width:320px}
+.vs-send-now{min-height:44px;width:100%;max-width:320px;border-radius:99px;border:1px solid rgba(201,162,75,.45);background:rgba(201,162,75,.16);color:var(--gold-hi);font:700 .82rem var(--sans);cursor:pointer;transition:background-color .2s,border-color .2s}
+.vs-send-now:hover{background:rgba(201,162,75,.26);border-color:var(--gold-hi)}
+.vs-send-now:focus-visible{outline:2px solid var(--gold-hi);outline-offset:2px}
 .vs-quick-actions .btn{min-height:40px;font-size:.78rem;padding:7px 13px}
 .vs-controls{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:320px;margin-top:4px}
 .vs-ctrl-btn{min-height:48px;min-width:48px;padding:10px 18px;border-radius:99px;font:700 .85rem var(--sans);display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:transform .18s,background-color .2s,border-color .2s,box-shadow .2s}
@@ -1701,6 +1704,7 @@ dialog{border:0;padding:0;background:transparent;max-width:none;max-height:none}
     <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
    </div>
    <div class="vs-live-caption" id="vsLiveCaption" role="status" aria-live="polite" data-i18n="voice.captionPlaceholder">Habla con naturalidad. Estoy escuchando...</div>
+   <button type="button" class="vs-send-now" id="vsBtnSendNow" hidden data-i18n="voice.sendNow">Enviar pregunta →</button>
    <div class="vs-quick-actions" id="vsQuickActions">
     <a class="btn btn-o btn-s" href="#/book-demo" data-i18n="cta.demo">Agendar Demo</a>
     <a class="btn btn-wa btn-s" href="https://wa.me/14072419326" target="_blank" rel="noopener noreferrer">WhatsApp</a>
@@ -2161,6 +2165,8 @@ Object.assign(D,{
 'voice.callAgain':['Call Again','Llamar de nuevo'],
 'voice.captionPlaceholder':['Speak naturally. I\'m listening...','Habla con naturalidad. Estoy escuchando...'],
 'voice.micDenied':['Microphone access denied. Please enable it or use written chat.','Acceso al micrófono denegado. Habilítalo o usa el chat escrito.'],
+'voice.sendNow':['Send now →','Enviar pregunta →'],
+'voice.listenNow':['🎤 Listening... Speak now','🎤 Te escucho... Habla ahora'],
 'voice.showcaseTitle':['Prefer talking instead of typing?','¿Prefieres hablar en lugar de escribir?'],
 'concierge.title':['Prefer talking instead of typing?','¿Prefieres hablar en lugar de escribir?'],
 'concierge.desc':['Try our new real-time telephone voice assistant. Speak directly with the NexGen Tax Pro virtual specialist in English or Spanish at no cost and with zero friction.','Prueba nuestro nuevo asistente de voz telefónico en tiempo real. Conversa directamente con el especialista virtual de NexGen Tax Pro en inglés o español sin costo ni fricción.'],
@@ -3169,6 +3175,8 @@ const VoiceConciergeEngine=(function(){
   const vsLiveCaption=$('#vsLiveCaption'),vsEndDuration=$('#vsEndDuration');
   const vsStartCall=$('#vsStartCall'),vsBtnMute=$('#vsBtnMute'),vsBtnEnd=$('#vsBtnEnd');
   const vsBtnTranscript=$('#vsBtnTranscript'),vsBtnCallAgain=$('#vsBtnCallAgain');
+  const vsBtnSendNow=$('#vsBtnSendNow');
+  const SpeechRecCtor=window.SpeechRecognition||window.webkitSpeechRecognition;
   const SENS_VOICE=/\b\d{3}[- ]\d{2}[- ]\d{4}\b|\b\d{2}-\d{7}\b|\b\d{9}\b/;
 
   let state='idle';
@@ -3188,6 +3196,9 @@ const VoiceConciergeEngine=(function(){
   let currentAudio=null;
   let currentAudioUrl=null;
   let abortCtrl=null;
+  let silenceTimer=null;
+  let accumulatedSpeech='';
+  let finalSpeech='';
 
   function formatDuration(sec){
     const m=String(Math.floor(sec/60)).padStart(2,'0');
@@ -3216,6 +3227,26 @@ const VoiceConciergeEngine=(function(){
     vsSpeakerBadge.textContent=lang==='es'?'🔊 Altavoz activo':'🔊 Speakerphone on';
   }
 
+  function showSendNow(visible){
+    if(!vsBtnSendNow)return;
+    vsBtnSendNow.hidden=!visible;
+  }
+
+  function clearSilenceTimer(){
+    if(silenceTimer){clearTimeout(silenceTimer);silenceTimer=null}
+  }
+
+  function resetSpeechBuffer(){
+    clearSilenceTimer();
+    accumulatedSpeech='';
+    finalSpeech='';
+    showSendNow(false);
+  }
+
+  function listeningPrompt(){
+    return typeof t==='function'?t('voice.listenNow'):(lang==='es'?'🎤 Te escucho... Habla ahora':'🎤 Listening... Speak now');
+  }
+
   function resetEqBars(){
     eqBars.forEach(b=>{b.style.height=''});
   }
@@ -3235,6 +3266,7 @@ const VoiceConciergeEngine=(function(){
     if(vsPanePre)vsPanePre.hidden=newState!=='idle';
     if(vsPaneActive)vsPaneActive.hidden=!(newState==='connecting'||newState==='listening'||newState==='thinking'||newState==='speaking');
     if(vsPaneEnded)vsPaneEnded.hidden=newState!=='ended';
+    if(newState!=='listening')showSendNow(false);
   }
 
   function setCaption(txt){
@@ -3312,11 +3344,25 @@ const VoiceConciergeEngine=(function(){
   }
 
   function safeStartRecognition(){
-    if(!recognition||isRecognizing||state!=='listening'||isMuted)return;
+    if(state!=='listening'||isMuted||!SpeechRecCtor)return;
+    if(!recognition){
+      setupSpeechRecognition();
+      return;
+    }
+    if(isRecognizing)return;
     try{
       recognition.lang=lang==='es'?'es-US':'en-US';
       recognition.start();
-    }catch(e){}
+    }catch(e){
+      try{recognition.abort()}catch(err){}
+      recognition=null;
+      isRecognizing=false;
+      setTimeout(()=>{
+        if(state!=='listening'||isMuted)return;
+        if(!recognition)setupSpeechRecognition();
+        else safeStartRecognition();
+      },200);
+    }
   }
 
   function speakWithBrowserFallback(textToSpeak,onDone){
@@ -3347,11 +3393,17 @@ const VoiceConciergeEngine=(function(){
   async function speakReply(cleanReply){
     if(state==='idle'||state==='ended')return;
     setCaption(cleanReply);
+    resetSpeechBuffer();
     setState('speaking');
     if(asAcousticEq)asAcousticEq.setAttribute('data-mode','speaking');
+    if(recognition){
+      try{recognition.abort()}catch(e){}
+      isRecognizing=false;
+    }
     const finishSpeaking=()=>{
       if(state==='speaking'){
         setState('listening');
+        setCaption(listeningPrompt());
         setTimeout(safeStartRecognition,180);
       }
     };
@@ -3402,6 +3454,7 @@ const VoiceConciergeEngine=(function(){
   async function processUserTurn(userText){
     if(state!=='listening'||!userText||!userText.trim()||isMuted)return;
     const cleanUser=userText.trim();
+    resetSpeechBuffer();
     setState('thinking');
 
     if(SENS_VOICE.test(cleanUser)||(typeof SENS!=='undefined'&&SENS.test(cleanUser))){
@@ -3444,13 +3497,20 @@ const VoiceConciergeEngine=(function(){
   }
 
   function setupSpeechRecognition(){
-    const SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
-    if(!SpeechRec)return false;
+    if(!SpeechRecCtor)return false;
+    if(recognition){
+      try{
+        recognition.onstart=null;recognition.onend=null;recognition.onresult=null;recognition.onerror=null;
+        recognition.abort();
+      }catch(e){}
+      recognition=null;
+    }
     try{
-      recognition=new SpeechRec();
+      recognition=new SpeechRecCtor();
       recognition.continuous=true;
       recognition.interimResults=true;
       recognition.lang=lang==='es'?'es-US':'en-US';
+      isRecognizing=false;
 
       recognition.onstart=()=>{
         isRecognizing=true;
@@ -3459,23 +3519,35 @@ const VoiceConciergeEngine=(function(){
       recognition.onresult=(event)=>{
         if(state!=='listening'||isMuted)return;
         let interim='';
-        let finalTxt='';
         for(let i=event.resultIndex;i<event.results.length;i++){
-          const transcript=event.results[i][0].transcript;
-          if(event.results[i].isFinal)finalTxt+=transcript+' ';
-          else interim+=transcript;
+          const result=event.results[i];
+          if(result.isFinal)finalSpeech=(finalSpeech+' '+result[0].transcript).replace(/\s{2,}/g,' ');
+          else interim+=result[0].transcript;
         }
-        if(interim.trim()&&state==='listening'){
-          setCaption(interim.trim());
-        }
-        if(finalTxt.trim()){
-          processUserTurn(finalTxt.trim());
-        }
+        accumulatedSpeech=(finalSpeech+' '+interim).replace(/\s{2,}/g,' ').trim();
+        if(!accumulatedSpeech)return;
+        setCaption('🗣️ '+accumulatedSpeech);
+        showSendNow(true);
+        if(asAcousticEq)asAcousticEq.setAttribute('data-mode','listening');
+        clearSilenceTimer();
+        silenceTimer=setTimeout(()=>{
+          silenceTimer=null;
+          if(state==='listening'&&accumulatedSpeech.trim()){
+            const pending=accumulatedSpeech.trim();
+            accumulatedSpeech='';
+            finalSpeech='';
+            showSendNow(false);
+            processUserTurn(pending);
+          }
+        },1300);
       };
 
       recognition.onerror=(e)=>{
-        if(e&&e.error==='not-allowed'){
+        const err=e&&e.error;
+        if(err==='not-allowed'||err==='service-not-allowed'){
           setCaption(t('voice.micDenied'));
+        }else if(err==='no-speech'||err==='aborted'||err==='network'){
+          if(state==='listening'&&!isMuted)setTimeout(safeStartRecognition,220);
         }
       };
 
@@ -3576,6 +3648,7 @@ const VoiceConciergeEngine=(function(){
   function cleanupHardware(){
     stopTimer();
     stopCurrentOutput();
+    resetSpeechBuffer();
     if(vadInterval){clearInterval(vadInterval);vadInterval=null}
     if(mediaRecorder){
       try{if(mediaRecorder.state!=='inactive')mediaRecorder.stop()}catch(e){}
@@ -3604,16 +3677,19 @@ const VoiceConciergeEngine=(function(){
     startTimer();
     setCaption(t('voice.captionPlaceholder'));
 
-    const hasSpeechRec=Boolean(window.SpeechRecognition||window.webkitSpeechRecognition);
-    if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+    const hasSpeechRec=Boolean(SpeechRecCtor);
+    if(!hasSpeechRec){
+      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+        setCaption(t('voice.micDenied'));
+        setState('listening');
+        return;
+      }
       try{
         mediaStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
       }catch(e){
-        if(!hasSpeechRec){
-          setCaption(t('voice.micDenied'));
-          setState('listening');
-          return;
-        }
+        setCaption(t('voice.micDenied'));
+        setState('listening');
+        return;
       }
     }
 
@@ -3623,7 +3699,8 @@ const VoiceConciergeEngine=(function(){
     }
 
     setState('listening');
-    const srStarted=setupSpeechRecognition();
+    setCaption(listeningPrompt());
+    const srStarted=hasSpeechRec&&setupSpeechRecognition();
     if(!srStarted&&mediaStream){
       setupMediaRecorderFallback(mediaStream);
     }
@@ -3638,6 +3715,7 @@ const VoiceConciergeEngine=(function(){
   function toggleMute(){
     if(state==='idle'||state==='ended')return;
     isMuted=!isMuted;
+    if(isMuted)resetSpeechBuffer();
     if(mediaStream){
       mediaStream.getAudioTracks().forEach(tr=>{tr.enabled=!isMuted});
     }
@@ -3703,11 +3781,21 @@ const VoiceConciergeEngine=(function(){
     }
   }
 
+  function flushSpeechBuffer(){
+    clearSilenceTimer();
+    const pending=accumulatedSpeech.trim();
+    accumulatedSpeech='';
+    finalSpeech='';
+    showSendNow(false);
+    if(pending&&state==='listening'&&!isMuted)processUserTurn(pending);
+  }
+
   if(vsStartCall)vsStartCall.addEventListener('click',()=>startCall());
   if(vsBtnMute)vsBtnMute.addEventListener('click',()=>toggleMute());
   if(vsBtnEnd)vsBtnEnd.addEventListener('click',()=>endCall(false));
   if(vsBtnTranscript)vsBtnTranscript.addEventListener('click',()=>injectTranscriptToChat());
   if(vsBtnCallAgain)vsBtnCallAgain.addEventListener('click',()=>resetToIdle());
+  if(vsBtnSendNow)vsBtnSendNow.addEventListener('click',()=>flushSpeechBuffer());
 
   return{
     setState,
