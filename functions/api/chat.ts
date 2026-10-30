@@ -12,11 +12,22 @@ interface Ctx {
 }
 
 type Lang = "es" | "en";
+type ChatMode = "chat" | "voice";
 
 interface HistoryItem {
   role: "user" | "assistant";
   content: string;
 }
+
+const VOICE_MODE_PROMPT = `
+
+VOICE MODE INSTRUCTIONS (CRITICAL FOR LIVE CALL):
+- You are speaking aloud over a live telephone call.
+- Deliver concise, executive, conversational responses (maximum 2 to 3 sentences, 35-65 words total).
+- NEVER use Markdown formatting (no asterisks, bold, italics, bullet points, headers, numbered lists).
+- NEVER output URLs or links; speak of 'the NexGen official website' or 'booking a live demo'.
+- NEVER mention any numeric price, fee, or dollar amount, or monetary symbols.
+- Tone: Warm, highly competent, empathetic, executive, professional, reassuring.`;
 
 const SYSTEM_PROMPT = `You are the NexGen Tax Pro Advisor, a bilingual (English/Spanish) virtual consultant for NexGen Tax Pro.
 
@@ -177,6 +188,7 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
 
   const message = text(body.message);
   const lang = normalizeLang(body.lang);
+  const mode: ChatMode = body.mode === "voice" ? "voice" : "chat";
   if (!message) return json({ error: "Escribe una pregunta." }, 400);
   if (message.length > 2000) return json({ error: "La pregunta es demasiado larga." }, 400);
 
@@ -201,8 +213,10 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
         .slice(-8)
     : [];
 
+  const systemContent = mode === "voice" ? SYSTEM_PROMPT + VOICE_MODE_PROMPT : SYSTEM_PROMPT;
+
   const messages = [
-    { role: "system", content: SYSTEM_PROMPT },
+    { role: "system", content: systemContent },
     ...history.map((item) => ({ role: item.role, content: item.content })),
     { role: "user", content: message },
   ];
@@ -214,7 +228,7 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
   try {
     const result = await context.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
       messages,
-      max_tokens: 350,
+      max_tokens: mode === "voice" ? 160 : 350,
       temperature: 0.35,
     });
     const raw = extractReply(result);
