@@ -3199,6 +3199,10 @@ const VoiceConciergeEngine=(function(){
   let silenceTimer=null;
   let accumulatedSpeech='';
   let finalSpeech='';
+  let micData=null;
+  let loudFrames=0;
+  let speakGraceUntil=0;
+  let currentSpokenReply='';
 
   function formatDuration(sec){
     const m=String(Math.floor(sec/60)).padStart(2,'0');
@@ -3247,8 +3251,85 @@ const VoiceConciergeEngine=(function(){
     return typeof t==='function'?t('voice.listenNow'):(lang==='es'?'🎤 Te escucho... Habla ahora':'🎤 Listening... Speak now');
   }
 
+  function canCapture(){
+    return !isMuted&&(state==='listening'||state==='speaking');
+  }
+
+  function normalizeVoiceText(value){
+    return String(value||'').toLowerCase().replace(/[^a-z0-9áéíóúñü\s]/gi,' ').replace(/\s+/g,' ').trim();
+  }
+
+  function isAssistantEcho(text){
+    const heard=normalizeVoiceText(text);
+    if(heard.length<4)return false;
+    const reply=normalizeVoiceText(currentSpokenReply);
+    return Boolean(reply)&&reply.includes(heard);
+  }
+
   function resetEqBars(){
-    eqBars.forEach(b=>{b.style.height=''});
+    eqBars.forEach(b=>{b.style.height='';b.style.animation=''});
+  }
+
+  function setupMicAnalyser(stream){
+    const ctx=ensureAudioContext();
+    if(!ctx||!stream)return;
+    try{
+      const src=ctx.createMediaStreamSource(stream);
+      micAnalyser=ctx.createAnalyser();
+      micAnalyser.fftSize=64;
+      micAnalyser.smoothingTimeConstant=0.55;
+      src.connect(micAnalyser);
+      micData=new Uint8Array(micAnalyser.frequencyBinCount);
+    }catch(e){
+      micAnalyser=null;
+      micData=null;
+    }
+  }
+
+  function bargeIn(){
+    if(state!=='speaking')return;
+    stopCurrentOutput();
+    setState('listening');
+    if(asAcousticEq)asAcousticEq.setAttribute('data-mode','listening');
+    safeStartRecognition();
+    startEqLoop();
+  }
+
+  function startEqLoop(){
+    if(eqRafId||!eqBars.length)return;
+    const tick=(ts)=>{
+      eqRafId=null;
+      if(state==='idle'||state==='ended')return;
+      const count=eqBars.length;
+      if(state==='listening'&&!isMuted){
+        if(micAnalyser&&micData)micAnalyser.getByteFrequencyData(micData);
+        eqBars.forEach((b,i)=>{
+          b.style.animation='none';
+          const level=micData?micData[Math.min(micData.length-1,Math.floor(i*micData.length/count))]/255:0;
+          b.style.height=(8+Math.min(40,level*58)).toFixed(1)+'px';
+        });
+      }else if(state==='thinking'){
+        eqBars.forEach((b,i)=>{
+          b.style.animation='none';
+          b.style.height=(16+Math.sin(ts/240+i*0.55)*10).toFixed(1)+'px';
+        });
+      }else{
+        eqBars.forEach(b=>{b.style.animation='';b.style.height=''});
+        if(state==='speaking'&&micAnalyser&&micData&&performance.now()>speakGraceUntil){
+          micAnalyser.getByteFrequencyData(micData);
+          let sum=0;
+          for(let i=0;i<micData.length;i++)sum+=micData[i];
+          const avg=sum/micData.length;
+          loudFrames=avg>62?loudFrames+1:0;
+          if(loudFrames>=5){
+            loudFrames=0;
+            bargeIn();
+          }
+        }
+      }
+      if(!eqRafId)eqRafId=requestAnimationFrame(tick);
+    };
+    eqRafId=requestAnimationFrame(tick);
   }
 
   function setState(newState){
@@ -3344,7 +3425,7 @@ const VoiceConciergeEngine=(function(){
   }
 
   function safeStartRecognition(){
-    if(state!=='listening'||isMuted||!SpeechRecCtor)return;
+    if(!canCapture()||!SpeechRecCtor)return;
     if(!recognition){
       setupSpeechRecognition();
       return;
@@ -3358,7 +3439,7 @@ const VoiceConciergeEngine=(function(){
       recognition=null;
       isRecognizing=false;
       setTimeout(()=>{
-        if(state!=='listening'||isMuted)return;
+        if(!canCapture())return;
         if(!recognition)setupSpeechRecognition();
         else safeStartRecognition();
       },200);
@@ -3381,6 +3462,7 @@ const VoiceConciergeEngine=(function(){
       const pref=voices.find(v=>v.lang&&v.lang.toLowerCase().startsWith(lang==='es'?'es':'en')&&/natural|google|siri|premium|female|paulina|monica|samantha|ava|allison/i.test(v.name))||voices.find(v=>v.lang&&v.lang.toLowerCase().startsWith(lang==='es'?'es':'en'));
       if(pref)u.voice=pref;
       setState('speaking');
+      speakGraceUntil=performance.now()+350;
       if(asAcousticEq)asAcousticEq.setAttribute('data-mode','speaking');
       u.onend=()=>{if(state==='speaking'&&onDone)onDone()};
       u.onerror=()=>{if(state==='speaking'&&onDone)onDone()};
@@ -3394,12 +3476,13 @@ const VoiceConciergeEngine=(function(){
     if(state==='idle'||state==='ended')return;
     setCaption(cleanReply);
     resetSpeechBuffer();
+    currentSpokenReply=cleanReply;
     setState('speaking');
+    speakGraceUntil=performance.now()+350;
+    loudFrames=0;
     if(asAcousticEq)asAcousticEq.setAttribute('data-mode','speaking');
-    if(recognition){
-      try{recognition.abort()}catch(e){}
-      isRecognizing=false;
-    }
+    safeStartRecognition();
+    startEqLoop();
     const finishSpeaking=()=>{
       if(state==='speaking'){
         setState('listening');
@@ -3435,15 +3518,18 @@ const VoiceConciergeEngine=(function(){
       audio.onended=()=>{
         if(currentAudioUrl){try{URL.revokeObjectURL(currentAudioUrl)}catch(e){}currentAudioUrl=null}
         currentAudio=null;
-        stopEqLoop();
+        resetEqBars();
         finishSpeaking();
       };
       audio.onerror=()=>{
         if(currentAudioUrl){try{URL.revokeObjectURL(currentAudioUrl)}catch(e){}currentAudioUrl=null}
         currentAudio=null;
-        stopEqLoop();
+        resetEqBars();
         speakWithBrowserFallback(cleanReply,finishSpeaking);
       };
+      speakGraceUntil=performance.now()+350;
+      loudFrames=0;
+      startEqLoop();
       await audio.play();
     }catch(err){
       if(err&&err.name==='AbortError')return;
@@ -3517,13 +3603,23 @@ const VoiceConciergeEngine=(function(){
       };
 
       recognition.onresult=(event)=>{
-        if(state!=='listening'||isMuted)return;
+        if(!canCapture())return;
         let interim='';
+        let finalChunk='';
         for(let i=event.resultIndex;i<event.results.length;i++){
           const result=event.results[i];
-          if(result.isFinal)finalSpeech=(finalSpeech+' '+result[0].transcript).replace(/\s{2,}/g,' ');
+          if(result.isFinal)finalChunk+=' '+result[0].transcript;
           else interim+=result[0].transcript;
         }
+        if(state==='speaking'){
+          if(performance.now()<speakGraceUntil)return;
+          const heard=(finalChunk+' '+interim).replace(/\s{2,}/g,' ').trim();
+          if(!heard||isAssistantEcho(heard))return;
+          bargeIn();
+          finalSpeech='';
+          accumulatedSpeech='';
+        }
+        if(finalChunk)finalSpeech=(finalSpeech+' '+finalChunk).replace(/\s{2,}/g,' ');
         accumulatedSpeech=(finalSpeech+' '+interim).replace(/\s{2,}/g,' ').trim();
         if(!accumulatedSpeech)return;
         setCaption('🗣️ '+accumulatedSpeech);
@@ -3539,7 +3635,7 @@ const VoiceConciergeEngine=(function(){
             showSendNow(false);
             processUserTurn(pending);
           }
-        },1300);
+        },800);
       };
 
       recognition.onerror=(e)=>{
@@ -3547,13 +3643,13 @@ const VoiceConciergeEngine=(function(){
         if(err==='not-allowed'||err==='service-not-allowed'){
           setCaption(t('voice.micDenied'));
         }else if(err==='no-speech'||err==='aborted'||err==='network'){
-          if(state==='listening'&&!isMuted)setTimeout(safeStartRecognition,220);
+          if(canCapture())setTimeout(safeStartRecognition,220);
         }
       };
 
       recognition.onend=()=>{
         isRecognizing=false;
-        if(state==='listening'&&!isMuted){
+        if(canCapture()){
           setTimeout(safeStartRecognition,180);
         }
       };
@@ -3573,14 +3669,7 @@ const VoiceConciergeEngine=(function(){
     let silenceStart=performance.now();
     let speakingDetected=false;
 
-    if(ctx){
-      try{
-        const src=ctx.createMediaStreamSource(stream);
-        micAnalyser=ctx.createAnalyser();
-        micAnalyser.fftSize=64;
-        src.connect(micAnalyser);
-      }catch(e){micAnalyser=null}
-    }
+    if(ctx&&!micAnalyser)setupMicAnalyser(stream);
 
     function startChunkRecording(){
       if(state==='idle'||state==='ended'||!stream.active)return;
@@ -3664,6 +3753,10 @@ const VoiceConciergeEngine=(function(){
       mediaStream=null;
     }
     micAnalyser=null;
+    micData=null;
+    loudFrames=0;
+    speakGraceUntil=0;
+    currentSpokenReply='';
   }
 
   async function startCall(){
@@ -3678,19 +3771,22 @@ const VoiceConciergeEngine=(function(){
     setCaption(t('voice.captionPlaceholder'));
 
     const hasSpeechRec=Boolean(SpeechRecCtor);
-    if(!hasSpeechRec){
-      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-        setCaption(t('voice.micDenied'));
-        setState('listening');
-        return;
-      }
+    if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
       try{
-        mediaStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+        mediaStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+        setupMicAnalyser(mediaStream);
       }catch(e){
-        setCaption(t('voice.micDenied'));
-        setState('listening');
-        return;
+        mediaStream=null;
+        if(!hasSpeechRec){
+          setCaption(t('voice.micDenied'));
+          setState('listening');
+          return;
+        }
       }
+    }else if(!hasSpeechRec){
+      setCaption(t('voice.micDenied'));
+      setState('listening');
+      return;
     }
 
     if(state==='idle'||state==='ended'){
@@ -3700,6 +3796,7 @@ const VoiceConciergeEngine=(function(){
 
     setState('listening');
     setCaption(listeningPrompt());
+    startEqLoop();
     const srStarted=hasSpeechRec&&setupSpeechRecognition();
     if(!srStarted&&mediaStream){
       setupMediaRecorderFallback(mediaStream);

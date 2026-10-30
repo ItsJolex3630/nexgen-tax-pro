@@ -19,10 +19,15 @@ interface HistoryItem {
   content: string;
 }
 
-const VOICE_MODE_PROMPT = `
-
-VOICE MODE INSTRUCTIONS (SPEAKERPHONE HANDS-FREE):
-You are a warm, highly competent senior tax consultant speaking aloud over hands-free speakerphone (altavoz). Speak naturally, conversationally, concisely (maximum 2 to 3 sentences, 35-55 words). Do not use lists, bullet points, asterisks, URLs or markdown. Strictly NEVER mention prices or dollar amounts; redirect pricing queries to booking a live demo with Kellys and Malka's team.`;
+const VOICE_LIVE_PROMPT = `You are Kellys and Malka's elite live AI concierge for NexGen Tax Pro on a live speakerphone telephone call.
+RULES FOR GOOGLE LIVE CONVERSATION:
+- Speak in Spanish if the user speaks Spanish; English if they speak English.
+- MAXIMUM 1 TO 2 SHORT SENTENCES (20 to 35 words total). NEVER monologue.
+- Keep a fast, warm, natural ping-pong conversational rhythm.
+- Answer the user's specific question directly, then end with a natural follow-up question.
+- Core knowledge: NexGen provides tax software (Desktop, Online, AI document OCR), training from zero to advanced with live Zoom clinics, tax office startup support (PTIN, EFIN, WISP), and year-round support since 2004.
+- ZERO PRICES: Never state dollar amounts, fees, ranges, or "$". For pricing, say that quotes are personalized based on office volume and offer a live demo.
+- CERO Markdown, asterisks, bullets, or URLs.`;
 
 const SYSTEM_PROMPT = `You are the NexGen Tax Pro Advisor, a bilingual (English/Spanish) virtual consultant for NexGen Tax Pro.
 
@@ -208,7 +213,7 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
         .slice(-8)
     : [];
 
-  const systemContent = mode === "voice" ? SYSTEM_PROMPT + VOICE_MODE_PROMPT : SYSTEM_PROMPT;
+  const systemContent = mode === "voice" ? VOICE_LIVE_PROMPT : SYSTEM_PROMPT;
 
   const messages = [
     { role: "system", content: systemContent },
@@ -225,14 +230,13 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
     "@cf/meta/llama-3.1-8b-instruct-fp8",
     "@cf/meta/llama-3-8b-instruct",
     "@cf/meta/llama-3.2-3b-instruct",
-    "@cf/meta/llama-3.2-1b-instruct",
   ];
 
   for (const model of models) {
     try {
       const result = await context.env.AI.run(model, {
         messages,
-        max_tokens: mode === "voice" ? 160 : 350,
+        max_tokens: mode === "voice" ? 80 : 350,
         temperature: 0.35,
       });
       const raw = extractReply(result);
