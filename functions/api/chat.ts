@@ -21,13 +21,8 @@ interface HistoryItem {
 
 const VOICE_MODE_PROMPT = `
 
-VOICE MODE INSTRUCTIONS (CRITICAL FOR LIVE CALL):
-- You are speaking aloud over a live telephone call.
-- Deliver concise, executive, conversational responses (maximum 2 to 3 sentences, 35-65 words total).
-- NEVER use Markdown formatting (no asterisks, bold, italics, bullet points, headers, numbered lists).
-- NEVER output URLs or links; speak of 'the NexGen official website' or 'booking a live demo'.
-- NEVER mention any numeric price, fee, or dollar amount, or monetary symbols.
-- Tone: Warm, highly competent, empathetic, executive, professional, reassuring.`;
+VOICE MODE INSTRUCTIONS (SPEAKERPHONE HANDS-FREE):
+You are a warm, highly competent senior tax consultant speaking aloud over hands-free speakerphone (altavoz). Speak naturally, conversationally, concisely (maximum 2 to 3 sentences, 35-55 words). Do not use lists, bullet points, asterisks, URLs or markdown. Strictly NEVER mention prices or dollar amounts; redirect pricing queries to booking a live demo with Kellys and Malka's team.`;
 
 const SYSTEM_PROMPT = `You are the NexGen Tax Pro Advisor, a bilingual (English/Spanish) virtual consultant for NexGen Tax Pro.
 
@@ -225,17 +220,30 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
     return json({ reply: fallbackAnswer(lang), source: "fallback" });
   }
 
-  try {
-    const result = await context.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
-      messages,
-      max_tokens: mode === "voice" ? 160 : 350,
-      temperature: 0.35,
-    });
-    const raw = extractReply(result);
-    const clean = sanitizeNoPrices(raw);
-    return json({ reply: clean || fallbackAnswer(lang), source: "ai" });
-  } catch (error) {
-    console.error("[chat] Workers AI error", error);
-    return json({ reply: fallbackAnswer(lang), source: "fallback" });
+  const models = [
+    "@cf/meta/llama-3.1-8b-instruct",
+    "@cf/meta/llama-3.1-8b-instruct-fp8",
+    "@cf/meta/llama-3-8b-instruct",
+    "@cf/meta/llama-3.2-3b-instruct",
+    "@cf/meta/llama-3.2-1b-instruct",
+  ];
+
+  for (const model of models) {
+    try {
+      const result = await context.env.AI.run(model, {
+        messages,
+        max_tokens: mode === "voice" ? 160 : 350,
+        temperature: 0.35,
+      });
+      const raw = extractReply(result);
+      const clean = sanitizeNoPrices(raw);
+      if (clean) {
+        return json({ reply: clean, source: "ai" });
+      }
+    } catch (error) {
+      console.error(`[chat] Workers AI model ${model} error`, error);
+    }
   }
+
+  return json({ reply: fallbackAnswer(lang), source: "fallback" });
 };
