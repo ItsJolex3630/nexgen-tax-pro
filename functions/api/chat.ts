@@ -148,6 +148,58 @@ export function sanitizeNoPrices(input: string): string {
   return text.replace(/\s{2,}/g, " ").trim();
 }
 
+function smartVoiceFallback(message: string, lang: Lang): string {
+  const m = message.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const es = lang === "es";
+
+  // Precios / Planes / Costo
+  if (/precio|cuanto|cuesta|costo|tarifa|valor|plan|early|pagar|mensualidad|price|cost|how much|fee|rate/.test(m)) {
+    return es
+      ? "En NexGen cotizamos de forma personalizada según el volumen de tu oficina y beneficios Early-Bird. ¿Te gustaría agendar una demo en vivo para darte una propuesta exacta?"
+      : "At NexGen we provide personalized quotes based on your office volume and Early-Bird terms. Would you like to book a live demo to get an exact proposal?";
+  }
+
+  // Capacitación / Cursos / Principiantes
+  if (/capacit|curso|aprender|clase|taller|entrena|principiante|cero|novato|training|learn|class|beginner|student/.test(m)) {
+    return es
+      ? "¡Por supuesto! Kellys y Malka brindan capacitación práctica desde cero por Zoom, con clínicas en vivo en temporada y soporte todo el año. ¿Ya preparas impuestos o vas a empezar desde cero?"
+      : "Of course! Kellys and Malka provide hands-on training from scratch via Zoom, with live tax clinics and year-round support. Do you already prepare taxes or are you starting from zero?";
+  }
+
+  // Apertura de oficina / EFIN / PTIN / WISP
+  if (/oficina|abrir|crear|iniciar|efin|ptin|wisp|banco|reembolso|office|start|launch|bank/.test(m)) {
+    return es
+      ? "Te acompañamos llave en mano para abrir tu oficina: gestión de PTIN, EFIN, manual de seguridad WISP y convenios bancarios para adelantos de reembolso. ¿Planeas abrir para esta temporada?"
+      : "We provide turnkey guidance to launch your tax office: PTIN, EFIN, WISP compliance, and bank partner setup for refund advances. Are you planning to open for this season?";
+  }
+
+  // Software / Desktop / Online / Sistema
+  if (/software|programa|sistema|computadora|online|nube|desktop|taxwise|1040|corporat/.test(m)) {
+    return es
+      ? "Nuestro software profesional prepara declaraciones personales y corporativas con e-file en los 50 estados y lectura de documentos con IA. ¿Prefieres licencia Desktop instalada o acceso Online en la nube?"
+      : "Our professional software handles individual and business returns with 50-state e-file and AI document import. Do you prefer installed Desktop or cloud Online access?";
+  }
+
+  // Fundadoras / Malka / Kellys / Quiénes son / Experiencia
+  if (/quien|fundad|malka|kellys|trayectoria|experiencia|duen|owner|who|founder|story/.test(m)) {
+    return es
+      ? "NexGen fue fundado por Kellys Sierra y Malka Leon, preparadoras activas con más de 20 años de trayectoria tributaria y empresarial en Florida. ¿Quieres hablar directamente con su equipo?"
+      : "NexGen was founded by Kellys Sierra and Malka Leon, active tax professionals with over 20 years of experience in Florida. Would you like to speak directly with their team?";
+  }
+
+  // Contacto / Teléfono / Ubicación / Horario / WhatsApp
+  if (/contacto|telefono|llamar|numero|donde|ubicad|horario|whatsapp|contact|phone|call|location|hours/.test(m)) {
+    return es
+      ? "Estamos en Florida y cubrimos los 50 estados. Puedes llamarnos al (407) 241-9326 para demos o escribirnos por WhatsApp. ¿Deseas que un asesor te contacte hoy mismo?"
+      : "We are headquartered in Florida serving all 50 states. You can call us at (407) 241-9326 or reach out on WhatsApp. Would you like a specialist to contact you today?";
+  }
+
+  // Saludo general / Default Google Live Ping-Pong
+  return es
+    ? "¡Hola! En NexGen Tax Pro te damos software tributario, capacitación práctica y apoyo para abrir tu oficina. ¿Qué aspecto de tu negocio fiscal te gustaría mejorar?"
+    : "Hello! At NexGen Tax Pro we provide professional tax software, hands-on training, and office launch support. What aspect of your tax practice would you like to grow?";
+}
+
 function fallbackAnswer(lang: Lang): string {
   if (lang === "en") {
     return "NexGen Tax Pro is more than tax software: it is a complete ecosystem for tax professionals. We provide the software to prepare and e-file returns, practical training from beginner to advanced, guidance to open and structure your tax office (PTIN, EFIN and WISP), and marketing support to win and retain clients. Our team offers personalized quotes and a live demo based on your stage. Would you like to book a demo or speak with Kellys and Malka's team?";
@@ -222,7 +274,8 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
   ];
 
   if (!context.env.AI || typeof context.env.AI.run !== "function") {
-    return json({ reply: fallbackAnswer(lang), source: "fallback" });
+    const defaultReply = mode === "voice" ? smartVoiceFallback(message, lang) : fallbackAnswer(lang);
+    return json({ reply: defaultReply, source: "fallback" });
   }
 
   const models = [
@@ -249,5 +302,6 @@ export const onRequest = async (context: Ctx): Promise<Response> => {
     }
   }
 
-  return json({ reply: fallbackAnswer(lang), source: "fallback" });
+  const finalReply = mode === "voice" ? smartVoiceFallback(message, lang) : fallbackAnswer(lang);
+  return json({ reply: finalReply, source: "fallback" });
 };
